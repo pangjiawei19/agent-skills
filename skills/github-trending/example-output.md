@@ -1,4 +1,10 @@
-# GitHub Trending 报告示例
+# GitHub Trending 抓取示例
+
+> 下方为 `count=10` 今日榜的典型输出样例，说明字段组装与边界情况（语言缺失、描述缺失、今日新增为 0 的降级写法）。
+
+---
+
+**GitHub Trending - 今日 Top 10** 🦐
 
 ---
 
@@ -19,7 +25,7 @@
 **3. superpowers** ⭐ 86,675 (+1,867 今日)
 - **链接：** [obra/superpowers](https://github.com/obra/superpowers)
 - **语言：** Shell
-- **描述：** 代理技能框架和软件开发方法论
+- **描述：** Agent 技能框架与软件开发方法论
 
 ---
 
@@ -33,14 +39,14 @@
 **5. heretic** ⭐ 14,852 (+1,062 今日)
 - **链接：** [p-e-w/heretic](https://github.com/p-e-w/heretic)
 - **语言：** Python
-- **描述：** 为语言模型提供完全自动化的内容审查移除功能
+- **描述：** 为 LLM 提供完全自动化的内容审查移除能力
 
 ---
 
 **6. learn-claude-code** ⭐ 28,441 (+872 今日)
 - **链接：** [shareAI-lab/learn-claude-code](https://github.com/shareAI-lab/learn-claude-code)
 - **语言：** TypeScript
-- **描述：** 从零构建的迷你版 Claude Code 代理
+- **描述：** 从零构建的迷你版 Claude Code Agent
 
 ---
 
@@ -58,10 +64,10 @@
 
 ---
 
-**9. InsForge** ⭐ 4,673 (+515 今日)
-- **链接：** [InsForge/InsForge](https://github.com/InsForge/InsForge)
-- **语言：** TypeScript
-- **描述：** 为智能体开发打造的后端基础设施
+**9. awesome-mcp-servers** ⭐ 8,421 (+0 今日)
+- **链接：** [example/awesome-mcp-servers](https://github.com/example/awesome-mcp-servers)
+- **语言：** N/A
+- **描述：** （无描述）
 
 ---
 
@@ -72,26 +78,38 @@
 
 ---
 
-## 📊 今日趋势分析
+## 📊 趋势洞察
 
-### 🔥 热门关键词
+### 🔥 热点方向
 
-- **AI** (8 个项目提及)
-- **Agent** (6 个项目提及)
-- **browser** (2 个项目提及)
+- **AI Agent 基础设施**（6/10）：OpenViking、superpowers、learn-claude-code、claude-code-best-practice、claude-plugins-official、GitNexus —— 从上下文存储、技能框架、学习资源到官方插件，生态在快速补位
+- **Claude Code 生态**（4/10）：官方插件 + 最佳实践 + 从零实现 + 知识图谱工具，一条完整链路
+- **浏览器/代码智能**（2/10）：lightpanda（AI 专用无头浏览器）、GitNexus（浏览器端 AST → 图谱）
 
-### 技术栈分布
+### 🧱 语言分布
 
-- **Python**: 5 个项目 (50%)
-- **TypeScript**: 4 个项目 (40%)
+- **Python**: 4 个项目 (40%)
+- **TypeScript**: 3 个项目 (30%)
 - **Zig**: 1 个项目 (10%)
 - **Shell**: 1 个项目 (10%)
 - **HTML**: 1 个项目 (10%)
+- **N/A**: 1 个项目 (10%)
 
-### 💡 观察
+### 💡 值得关注
 
-- 今日最热项目：**MiroFish**，单日增长 2,782 星
-- 平均每个项目今日增长：1,021 星
-- AI Agent 基础设施是绝对热点，10 个项目中有 8 个相关
-- Claude Code 生态已形成完整链条（官方插件 + 最佳实践 + 学习项目）
-- 浏览器自动化方向持续受到关注
+- **Zig 上榜**：lightpanda 用 Zig 做 AI 专用无头浏览器，非主流语言能进 Top 4 通常意味着性能诉求很硬
+- **单日最快增长**：MiroFish 今日 +2,782，一个新项目冷启动就冲到第一，可以留意下后续热度持续性
+- **冷门降级示例**：awesome-mcp-servers 无语言标签（awesome 系都是纯 Markdown）且描述为空 → 按规则显示 `N/A` / `（无描述）` / `+0`，不报错
+
+---
+
+## 字段说明备忘
+
+- **总 Star / 今日新增**：含千位分隔符（`27,989`、`+2,782`），保留数字格式
+- **语言缺失**：显示 `N/A`，常见于 awesome 系仓库或纯文档项目
+- **描述缺失**：显示 `（无描述）`，不做其他推测
+- **今日新增为 0**：显示 `+0`，通常出现在榜单末位或冷门时段
+- **顺序**：GitHub 返回的顺序即 Trending 排序，不额外排序
+- **汇总行**：根据 `since` / `language` 参数调整，例如 "本周 Python Top 10"
+
+> 注：本文件为格式示例，部分数据为占位（如 awesome-mcp-servers），用于演示降级规则；其余项目基于真实 Trending 快照。
