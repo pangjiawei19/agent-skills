@@ -16,8 +16,9 @@
 ```
 docs/
 ├── project-overview/          # 项目层（非业务内容）
-│   ├── README.md              # DOC_META + DOMAIN_MAP 锚点 + 项目简介 + 域索引
-│   ├── architecture.md        # 架构模式、目录结构、领域划分表、跨域 ER 主图
+│   ├── README.md              # DOC_META + DOMAIN_MAP + 项目背景 + 技术栈 + 核心功能 + 域索引
+│   ├── architecture.md        # 架构模式、系统架构图、目录结构、领域划分、跨域 ER
+│   ├── milestones.md          # 里程碑（历史 + 未来）
 │   ├── dependencies.md        # 外部依赖
 │   ├── deployment.md          # 部署说明
 │   └── development.md         # 开发指南
@@ -119,6 +120,15 @@ skill 在 `docs/project-overview/README.md` 头部写入两个锚点：
 ### 项目不是 git 仓库怎么办？
 
 skill 会自动检测（`git rev-parse --is-inside-work-tree`），非 git 仓库强制走全量生成，DOC_META 中 `last_commit` 填 `none`。
+
+### 里程碑从哪来？
+
+- **历史里程碑**：优先从 `git tag --sort=-creatordate` 提取，其次从 `CHANGELOG.md` 的版本节提取；两者都没有时 `milestones.md` 仍生成，但整块写"待补充"引导人工填写
+- **未来里程碑**：AI 推不出，整块留"待补充"
+
+### 系统架构图画到什么程度？
+
+从依赖和配置能准确识别的组件（数据库、MQ、主要第三方 SDK）都会画；推不出的组件（网关、CDN、负载均衡——通常在部署层而非代码层）**不画**，只在组件清单表里标"待补充"。详见 [references/language-hints.md](references/language-hints.md) 的"架构组件识别"小节。
 
 ## 贡献
 

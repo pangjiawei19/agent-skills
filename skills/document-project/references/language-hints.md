@@ -279,6 +279,71 @@ shared-libs:
 
 ---
 
+## 架构组件识别（Step 1.4.2 / Step 4.5 用）
+
+从依赖和配置推断**系统架构图里应该出现的组件**。每种组件给出典型依赖名 + 配置 key。
+
+### 数据存储
+
+| 组件 | 依赖信号 | 配置信号 |
+|------|---------|---------|
+| MySQL | `mysql-connector-j`、`mysql2`（Node）、`pymysql`（Python）、`go-sql-driver/mysql` | `spring.datasource.url` 含 `jdbc:mysql://` / `DATABASE_URL=mysql://` |
+| PostgreSQL | `postgresql`、`pg`（Node）、`psycopg2`、`lib/pq`（Go） | `jdbc:postgresql://` / `DATABASE_URL=postgres://` |
+| MongoDB | `spring-data-mongodb`、`mongoose`、`pymongo`、`go.mongodb.org/mongo-driver` | `spring.data.mongodb.uri` / `MONGO_URL` |
+| Redis | `lettuce-core`、`jedis`、`ioredis`、`redis`（Python）、`go-redis` | `spring.data.redis.*` / `REDIS_URL` |
+| Elasticsearch | `spring-data-elasticsearch`、`@elastic/elasticsearch`、`elasticsearch`（Python） | `elasticsearch.hosts` 配置 |
+| ClickHouse | `clickhouse-jdbc`、`@clickhouse/client` | `clickhouse.url` |
+
+### 消息队列 / 流处理
+
+| 组件 | 依赖信号 |
+|------|---------|
+| Kafka | `spring-kafka`、`kafkajs`、`confluent-kafka`（Python）、`segmentio/kafka-go` |
+| RabbitMQ | `spring-amqp`、`amqplib`、`pika`、`rabbitmq/amqp091-go` |
+| RocketMQ | `rocketmq-client-java`、`rocketmq-client-go` |
+| Pulsar | `pulsar-client`、`apache/pulsar-client-go` |
+| NATS | `nats-streaming`、`nats.go` |
+
+### 第三方集成（识别到就画进架构图）
+
+| 类别 | 典型依赖 |
+|------|---------|
+| 支付 | `alipay-sdk-java`、`wechatpay-java`、`stripe`、`paypal-rest-sdk` |
+| 对象存储 | `aws-java-sdk-s3`、`@aws-sdk/client-s3`、`aliyun-sdk-oss`、`cos-java-sdk`、`minio` |
+| 短信 | `aliyun-java-sdk-dysmsapi`、`twilio`、`tencentcloud-sdk-sms` |
+| 邮件 | `spring-boot-starter-mail`、`nodemailer`、`sendgrid`、`ses-sdk` |
+| 推送 | `firebase-admin`、`apns2`、`getui-push` |
+| OAuth / 鉴权 | `keycloak-spring-boot-starter`、`passport`、`@auth0/auth0-spa-js` |
+| 搜索 / AI | `@openai/openai`、`langchain`、`anthropic-sdk` |
+
+### 可观测性
+
+| 组件 | 依赖信号 |
+|------|---------|
+| Prometheus | `micrometer-registry-prometheus`、`prom-client`（Node）、`prometheus_client`（Python） |
+| Grafana | 通常无代码依赖，从 `grafana/` 目录或部署配置推断 |
+| Sentry | `sentry-spring-boot-starter`、`@sentry/node`、`sentry-sdk`（Python） |
+| DataDog | `dd-trace-java`、`dd-trace`（Node）、`ddtrace`（Python） |
+| OpenTelemetry | `opentelemetry-*` 系列 |
+
+### 网关 / 负载均衡 / CDN
+
+这些组件**通常在代码层不可见**——从 `Dockerfile`、`docker-compose.yml`、`nginx.conf`、k8s manifest、CI 部署脚本里推断。推不出就**不画该节点**，不要脑补。
+
+### 前端形态识别
+
+| 形态 | 信号 |
+|------|------|
+| Web（SPA） | `react`、`vue`、`svelte` + 无 `next/nuxt` | 
+| Web（SSR） | `next`、`nuxt`、`astro`、`remix` |
+| 移动 App | `react-native`、`flutter`、`@ionic/*` |
+| 桌面 | `electron`、`tauri` |
+| 小程序 | `taro`、`uniapp`、`wechat-miniprogram` |
+
+前后端在同一个仓库时能准确推断；**纯后端仓库推不出前端形态**——画一个通用 `Frontend` 节点 + "待补充具体形态"。
+
+---
+
 ## 通用排查清单
 
 拿到项目后优先扫描这些文件（用于快速建立项目画像）：

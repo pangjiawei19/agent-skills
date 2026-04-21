@@ -27,8 +27,8 @@ description: Analyze existing codebase and generate comprehensive project docume
 - [example-output.md](example-output.md) — 完整文档示例（虚构项目，仅示意结构）
 
 **加载策略**（按需加载，不要一次全读）：
-- `language-hints.md`：Step 1 识别项目类型后加载对应语言的小节，Step 1.5（领域识别）、Step 2 / 3 / 5 复用
-- `output-templates.md`：Step 1-5 各自产出前加载对应小节；Step 6 组装时加载 Step 6 骨架（含 DOMAIN_MAP 格式、全局层 + 领域层模板）
+- `language-hints.md`：Step 1 识别项目类型后加载对应语言的小节，Step 1.5（领域识别）、Step 2 / 3 / 5 复用；Step 4.5（系统架构图）加载"架构组件识别"小节
+- `output-templates.md`：Step 1-5 各自产出前加载对应小节；Step 6 组装时加载 Step 6 骨架（含 DOMAIN_MAP 格式、项目层 + 领域层模板、milestones.md 模板）
 - `tool-mapping.md`：仅在非 Claude Code 平台运行时需要加载
 
 ## 不适用场景（先判断）
@@ -60,8 +60,9 @@ description: Analyze existing codebase and generate comprehensive project docume
 ```
 docs/
 ├── project-overview/
-│   ├── README.md              # DOC_META + DOMAIN_MAP 锚点 + 项目简介 + 域索引
-│   ├── architecture.md        # 架构模式、目录结构、领域划分表、ER 主图
+│   ├── README.md              # DOC_META + DOMAIN_MAP + 项目背景 + 技术栈 + 核心功能 + 域索引
+│   ├── architecture.md        # 架构模式、系统架构图、目录结构、领域划分表、ER 主图
+│   ├── milestones.md          # 里程碑（历史 + 未来）
 │   ├── dependencies.md        # 外部依赖
 │   ├── deployment.md          # 部署说明
 │   └── development.md         # 开发指南
@@ -244,7 +245,61 @@ git diff <last_commit> HEAD --stat
 
 优先读取：`README.md`、`CONTRIBUTING.md`、`CHANGELOG.md`、`Dockerfile`、`docker-compose.yml`、CI 配置（`.github/workflows/*`、`.gitlab-ci.yml`）、`Makefile`、`.env.example`、`openapi.yaml`。
 
-输出格式见 [references/output-templates.md](references/output-templates.md) 的 Step 1 小节。
+### 1.4 项目背景 + 技术栈分类 + 里程碑数据采集
+
+本子步骤采集"非业务的项目级信息"，与域无关，不依赖 Step 1.5 DOMAIN_MAP。
+
+#### 1.4.1 项目背景提取
+
+从以下来源推断，写入 `project-overview/README.md`：
+
+| 要素 | 数据源（按优先级） | 推不出时 |
+|------|------------------|---------|
+| 业务背景 | `README.md` 的引言/Overview/About 节、`package.json` description | `> ⚠️ 待补充（需人工确认）：项目的业务背景、要解决的问题` |
+| 目标用户 / 使用场景 | `README.md` 的"Who is this for" / "Use cases" / 权限配置里的角色 | 同上格式，注明"目标用户" |
+| 核心价值 | `README.md` 的 Features / Why / Highlights 节 | 同上格式 |
+
+**重要**：项目背景属于 AI 最容易幻觉的部分（没有强约束的文字）。严格遵守 Step 6.0 原则——读不到就写"待补充"，不要从项目名脑补。
+
+#### 1.4.2 技术栈分类
+
+从 1.2 已提取的依赖清单 + 配置文件分类：
+
+| 类别 | 典型依赖信号 |
+|------|-------------|
+| 后端框架 | Spring Boot / NestJS / FastAPI / Gin / Actix |
+| 前端框架 | React / Vue / Next.js / Nuxt（从 `package.json` 或子模块推断） |
+| 数据存储 | MySQL / PostgreSQL / MongoDB / Redis / Elasticsearch（从驱动依赖 + 配置 URL） |
+| 消息队列 | Kafka / RabbitMQ / RocketMQ / Pulsar |
+| DevOps | Docker / GitHub Actions / GitLab CI（从 Dockerfile + `.github/workflows/*`） |
+| 监控 | Prometheus / Grafana / Sentry / DataDog SDK |
+| 鉴权（可选） | Spring Security / Keycloak / Auth0 / Passport |
+| 第三方集成（可选） | 支付 SDK / OSS SDK / 短信 / 邮件服务 |
+
+输出精简版（每类一行），详细版本留给 `dependencies.md`。找不到的类别**省略**，不要写"无"。
+
+详细的依赖命名信号按语言见 [references/language-hints.md](references/language-hints.md) 的"架构组件识别"小节。
+
+#### 1.4.3 里程碑数据采集
+
+采集命令：
+
+```bash
+# 历史 tag 及对应 commit 信息
+git tag --sort=-creatordate | head -20
+git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=short | head -30
+
+# CHANGELOG（如果有）
+# 读取 CHANGELOG.md 全文
+```
+
+数据源策略：
+- **有 git tag**：按 tag + 日期 + tag message 生成历史里程碑，每个 tag 对应一行
+- **无 tag 但有 CHANGELOG.md**：按 CHANGELOG 版本节生成
+- **两者都没有**：里程碑文件**仍生成**，但"历史里程碑"整块写 `> ⚠️ 待补充（需人工确认）：未发现 git tag 或 CHANGELOG`
+- **未来规划**：无论历史如何，都写 `> ⚠️ 待补充（需人工确认）：未来里程碑需人工规划填写`
+
+输出格式见 [references/output-templates.md](references/output-templates.md) 的 Step 1 和 Step 6 小节。
 
 ---
 
@@ -416,6 +471,27 @@ git diff <last_commit> HEAD --stat
 
 输出格式见 [references/output-templates.md](references/output-templates.md) 的 Step 3 小节。
 
+### 3.5 核心功能聚合（跨域）
+
+在完成各域的 Controller/Service 梳理后，聚合成**用户视角**的核心功能清单，写入 `project-overview/README.md` 的"核心功能"节。
+
+**数据源**（按优先级）：
+1. 各域 Controller 的 REST 端点（如 `POST /api/orders` → "下单"）
+2. 事件发布（如 `OrderCreated` → "触发订单创建通知"）
+3. 定时任务（如 `@Scheduled` → "每日账单结算"）
+
+**组织方式**：按业务域分组，每组 3-5 个功能。
+
+**写作原则**：
+- **用户视角**：写"下单"、"取消订单"，不写"调用 OrderController.create"
+- **从端点名称推断功能名**，命名歧义时标 `[推断]`
+- 每个功能后加链接到对应域的文档：`[下单](../domains/order/README.md#下单流程)`
+- **只列用户能做的动作**，内部调用、管理后台接口另列或省略
+
+**数量控制**：全量核心功能清单 **≤ 20 个**。超出时只留高频 / 高价值的 20 个，其余以"完整端点见各域 README"收尾。
+
+输出格式见 [references/output-templates.md](references/output-templates.md) 的 Step 6 `README.md` 模板。
+
 ---
 
 ## Step 4: 架构结构分析
@@ -459,6 +535,39 @@ git diff <last_commit> HEAD --stat
 2. **跨域 ER 主图**（Mermaid `erDiagram`）：**只画涉及跨域引用的实体关系**（如 Order → User、Payment → User），域内实体细节留给各域的 `domain-model.md`
 
 目的：让读 architecture.md 的人一眼看到目录结构、业务域划分、以及跨域实体关系这三件事。不画全量 ER（全量在各域内各自画），避免这张图随实体增加而失控。
+
+### 4.5 系统架构图（C4 Context/Container 级别）
+
+在 `architecture.md` 的"架构模式"节后新增"系统架构图"节，用 Mermaid `flowchart` 画部署拓扑 / 组件关系。
+
+**画什么**（自上而下分组）：
+- **外部 actor**：终端用户、管理员、外部系统（从 README 或权限配置推断；没有就画一个通用 `User`）
+- **前端**：Web / 移动端 / 管理后台（从 `package.json`、README 提及、共存的子目录推断）
+- **网关 / 负载均衡**：nginx / ALB / APISIX 等（从 `Dockerfile`、`docker-compose.yml`、CI 配置推断；推不出就**省略该节点**）
+- **后端服务**：按 `@SpringBootApplication` / `main` 入口数量 / `docker-compose.yml services` 数量决定画几个
+- **数据层**：DB / 缓存 / 搜索引擎（从驱动依赖 + 配置推断）
+- **消息层**：Kafka / RabbitMQ / MQ broker（从依赖 + 配置推断）
+- **第三方集成**：支付 / OSS / 短信 / 邮件（从 SDK 依赖推断）
+
+**连线原则**（从代码能看出的）：
+- 后端 → 数据层：有对应的 Repository / DAO 则画连线
+- 后端 → MQ：有 Producer / Consumer 则画
+- 后端 → 第三方：有对应 SDK 调用则画
+
+**推不出的部分**处理：
+- 整个节点推不出（如网关）→ **不画**该节点
+- 某条连线推不出（如内部服务间 RPC 调用）→ 用虚线 + `[待补充]` 标签
+- 前端具体形态（Web/App/小程序）推不出 → 画一个通用 `Frontend` 节点
+
+**图后补充一张"组件清单"表**（列出每个节点的来源证据，便于人工 review）：
+
+| 组件 | 实际证据 | 备注 |
+|------|---------|------|
+| MySQL | `spring.datasource.url` in `application.yml` + `mysql-connector-j` 依赖 | |
+| Kafka | `spring-kafka` 依赖 + `spring.kafka.bootstrap-servers` 配置 | |
+| Nginx | `待补充` | 未在代码库发现，通常是部署层 |
+
+详细的组件识别规则见 [references/language-hints.md](references/language-hints.md) 的"架构组件识别"小节。
 
 输出格式见 [references/output-templates.md](references/output-templates.md) 的 Step 4 小节。
 
@@ -504,15 +613,27 @@ git diff <last_commit> HEAD --stat
 
 | 章节 | 数据来源 | 找不到来源时 |
 |------|---------|------------|
-| 项目简介 | 构建文件 + README | 从代码推断，标注 `[推断]` |
-| 核心领域模型 | 实体类代码 + 注解 | **字段级**：略过无法确认的字段（保留实体骨架）；**实体级**：若核心字段都无法确定，降级到"次要实体"表格 |
+| 项目简介 - 类型/技术栈/版本 | 构建文件 | 从代码推断，标注 `[推断]` |
+| 项目简介 - 业务背景/目标用户/核心价值 | `README.md` 引言、`package.json` description | **整块写"待补充"**，不要脑补 |
+| 技术栈总览 | 依赖清单分类（Step 1.4.2） | 找不到的类别省略，不写"无" |
+| 核心功能列表 | 各域 Controller 端点 + 事件 + 定时任务（Step 3.5） | 命名歧义标 `[推断]`；都推不出时整节写"待补充" |
+| 核心领域模型 | 实体类代码 + 注解 | **字段级**：略过无法确认的字段；**实体级**：无法确认核心字段则降级到"次要实体"表格 |
 | 业务流程 | Controller + Service 调用链 | 只画能追踪到的部分，标注 `[部分流程未覆盖]` |
 | 项目结构 | 目录扫描 + DOMAIN_MAP | 客观陈述，无需推断 |
+| **系统架构图** | Dockerfile / docker-compose / 依赖 / 配置 | 推不出的节点不画；推不出的连线用虚线 + `[待补充]` |
+| **里程碑 - 历史** | `git tag` + `CHANGELOG.md` | 两者都无时整块写"待补充（未发现 git tag 或 CHANGELOG）" |
+| **里程碑 - 未来** | — | 整块写"待补充（需人工规划填写）" |
 | 外部依赖 | 构建文件 + 配置文件 | 无则不列 |
 | 部署说明 - 环境要求 | 构建文件、`Dockerfile`、`docker-compose.yml`、CI | 未声明组件写 `待补充` |
 | 部署说明 - 启动步骤 | `README`、`Makefile`、`scripts`、`CMD`、CI workflow | 找不到则写 `待补充（未在代码库中发现启动脚本）` |
 | 部署说明 - 配置说明 | `application-example.yml`、`.env.example`、配置类 | 不要编造配置项 |
 | 开发指南 | `CONTRIBUTING.md`、lint 配置、git hooks、`CODEOWNERS` | 找不到则整节写 `待补充（建议人工编写）` |
+
+**统一的"待补充"格式**（显式可见，便于人工找到并补上）：
+
+```markdown
+> ⚠️ 待补充（需人工确认）：<此处提示期望内容或推不出的原因>
+```
 
 ### 6.2 判断每个域是单文件还是拆分模式
 
@@ -529,12 +650,13 @@ git diff <last_commit> HEAD --stat
 
 按 [references/output-templates.md](references/output-templates.md) 的 Step 6 骨架，把 Step 1-5 产出按下表分发：
 
-**项目层**（`docs/project-overview/`，5 个文件）：
+**项目层**（`docs/project-overview/`，6 个文件）：
 
 | 文件 | 内容 | 来源 |
 |------|------|------|
-| `README.md` | DOC_META + DOMAIN_MAP 锚点 + 项目简介 + 域索引 | Step 1 |
-| `architecture.md` | 架构模式 + 目录结构 + 领域划分表 + 跨域 ER 主图 | Step 4 |
+| `README.md` | DOC_META + DOMAIN_MAP + 项目简介（含背景/技术栈/目标用户）+ 核心功能 + 域索引 | Step 1 + 3.5 |
+| `architecture.md` | 架构模式 + **系统架构图** + 目录结构 + 领域划分表 + 跨域 ER 主图 | Step 4 |
+| `milestones.md` | 历史里程碑（git tag / CHANGELOG 提取）+ 未来规划（待补充） | Step 1.4.3 |
 | `dependencies.md` | 依赖表格、第三方服务 | Step 5 |
 | `deployment.md` | 环境要求、配置说明、启动步骤 | Step 6 |
 | `development.md` | 本地开发、代码规范、提交规范、FAQ | Step 6 |
@@ -605,8 +727,11 @@ mkdir -p docs/domains/<domain>
 
 ### 7.3 结构完整性
 
-- [ ] `docs/project-overview/` 下 5 个文件都已生成（README / architecture / dependencies / deployment / development）
+- [ ] `docs/project-overview/` 下 6 个文件都已生成（README / architecture / milestones / dependencies / deployment / development）
 - [ ] `project-overview/README.md` 头部同时写入 `<!-- DOC_META: ... -->` 和 `<!-- DOMAIN_MAP ... -->` 锚点
+- [ ] `README.md` 有"项目背景 / 技术栈总览 / 核心功能"三个新节（推不出的部分用统一"待补充"格式）
+- [ ] `architecture.md` 含"系统架构图"节（Mermaid flowchart）+ 组件清单表
+- [ ] `milestones.md` 已生成（即使无 tag/CHANGELOG 也要生成空壳 + 待补充）
 - [ ] 多领域项目：`docs/domains/README.md` + 每个 `domains/<X>/README.md` 都已生成
 - [ ] 单领域项目：退化结构正确（无 `docs/domains/`，`project-overview/` 下含 `domain-model.md` 和 `flows.md`）
 

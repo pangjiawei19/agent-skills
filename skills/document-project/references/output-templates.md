@@ -220,12 +220,53 @@ user:
 ## 项目简介
 
 - **项目类型**: [Web 应用 / 微服务 / 库 / CLI 工具等]
-- **技术栈**: [主要技术栈]（来源: [构建文件]）
 - **版本**: [当前版本]（来源: [构建文件]）
 - **构建工具**: [Maven / Gradle / npm / pnpm / cargo 等]
 
-### 项目目标
-[从 README 或代码推断的项目目标和用途。若纯推断，标注 [推断]]
+### 业务背景
+[从 README 引言 / package.json description 读取]
+
+> ⚠️ 待补充（需人工确认）：项目的业务背景、要解决的问题
+
+### 目标用户 / 使用场景
+[从 README 的"Who is this for" / "Use cases" 或权限角色推断；找不到则整节改写为下方待补充]
+
+> ⚠️ 待补充（需人工确认）：项目面向的用户角色和典型使用场景
+
+### 核心价值
+[从 README 的 Features / Why 节推断；找不到则整节改写为下方待补充]
+
+> ⚠️ 待补充（需人工确认）：项目的核心价值主张
+
+## 技术栈总览
+
+> 高层分类清单，版本详情见 [外部依赖](./dependencies.md)。找不到的类别省略不写。
+
+- **后端**: Spring Boot 3.x（来源: `pom.xml`）
+- **前端**: React 18 / Next.js 14（来源: `web/package.json`）
+- **数据存储**: MySQL 8, Redis 7（来源: 依赖 + `application.yml`）
+- **消息队列**: Kafka（来源: `spring-kafka` 依赖）
+- **DevOps**: Docker, GitHub Actions（来源: `Dockerfile`, `.github/workflows/`）
+- **监控**: Prometheus, Grafana（来源: `micrometer-registry-prometheus` 依赖）
+
+## 核心功能
+
+> 用户视角的核心功能清单。完整端点见各域 README。
+
+### 订单相关
+- [下单](../domains/order/README.md#创建订单流程) — POST /api/orders
+- [查询订单](../domains/order/README.md) — GET /api/orders/{id}
+- [取消订单](../domains/order/README.md) — POST /api/orders/{id}/cancel
+
+### 支付相关
+- [在线支付](../domains/payment/README.md#charge) — POST /api/payments
+- [申请退款](../domains/payment/README.md#refund) — POST /api/refunds
+
+### 账户相关
+- [用户注册](../domains/user/README.md#注册流程)
+- [登录](../domains/user/README.md#登录流程)
+
+[按业务域分组，每组 3-5 个；全量 ≤ 20 个；命名歧义标 [推断]]
 
 ## 业务域
 
@@ -240,7 +281,8 @@ user:
 ## 文档目录
 
 **项目层**（本目录）：
-- [项目结构](./architecture.md) — 架构模式、目录组织、领域划分、跨域 ER 主图
+- [项目结构](./architecture.md) — 架构模式、系统架构图、目录组织、领域划分、跨域 ER
+- [里程碑](./milestones.md) — 发布历史与未来规划
 - [外部依赖](./dependencies.md) — 框架、库、第三方服务
 - [部署说明](./deployment.md) — 环境要求、启动步骤
 - [开发指南](./development.md) — 本地开发、代码规范
@@ -272,6 +314,61 @@ user:
 ## 架构模式
 本项目采用 **[分层架构 / 六边形 / 微服务 / 模块化单体]** 模式。
 **判断依据**: [目录结构 / 包命名 / 关键注解]
+
+## 系统架构图
+
+> 展示部署拓扑和组件关系。推不出的节点不画，推不出的连线用虚线 + `[待补充]`。
+
+\`\`\`mermaid
+flowchart TB
+    User[终端用户]
+    Admin[管理员]
+
+    subgraph Frontend[前端]
+        Web[Web App<br/>Next.js]
+        AdminUI[管理后台]
+    end
+
+    subgraph Backend[后端服务]
+        API[API Server<br/>Spring Boot]
+    end
+
+    subgraph Data[数据层]
+        MySQL[(MySQL)]
+        Redis[(Redis)]
+    end
+
+    subgraph MQ[消息层]
+        Kafka[Kafka]
+    end
+
+    subgraph External[第三方]
+        Alipay[支付宝]
+        OSS[对象存储]
+    end
+
+    User --> Web
+    Admin --> AdminUI
+    Web --> API
+    AdminUI --> API
+    API --> MySQL
+    API --> Redis
+    API --> Kafka
+    API --> Alipay
+    API --> OSS
+\`\`\`
+
+### 组件清单
+
+| 组件 | 实际证据 | 备注 |
+|------|---------|------|
+| MySQL | `mysql-connector-j` 依赖 + `spring.datasource.url` in `application.yml` | |
+| Redis | `lettuce-core` 依赖 + `spring.data.redis.*` 配置 | |
+| Kafka | `spring-kafka` 依赖 + `spring.kafka.bootstrap-servers` 配置 | |
+| 支付宝 SDK | `alipay-sdk-java` 依赖 + `AlipayClient` 使用 | |
+| OSS | `aliyun-sdk-oss` 依赖 | |
+| Nginx / API 网关 | `> ⚠️ 待补充（需人工确认）`：未在代码库发现，通常在部署层 | |
+| 管理后台 | `> ⚠️ 待补充（需人工确认）`：未发现独立前端代码 | |
 
 ## 目录结构
 \`\`\`
@@ -305,6 +402,58 @@ erDiagram
 - **规范**（从代码归纳）: [注解使用、返回类型等]
 
 [继续描述其他层次]
+```
+
+---
+
+### `docs/project-overview/milestones.md`
+
+```markdown
+# 项目里程碑
+
+[返回概览](./README.md)
+
+> 历史里程碑从 `git tag` + `CHANGELOG.md` 提取；未来规划需人工填写。
+
+## 历史里程碑
+
+\`\`\`mermaid
+timeline
+    title 项目演进
+    2024-06 : v0.1.0<br/>初版上线
+    2024-09 : v0.5.0<br/>接入支付网关
+    2024-12 : v1.0.0<br/>正式发布
+    2025-03 : v1.2.0<br/>国际化支持
+\`\`\`
+
+### 发布历史
+
+| 版本 | 日期 | 主要变更 | 来源 |
+|------|------|---------|------|
+| v0.1.0 | 2024-06-10 | 初版上线 | git tag + CHANGELOG.md |
+| v0.5.0 | 2024-09-20 | 接入支付宝 / 微信支付 | CHANGELOG.md |
+| v1.0.0 | 2024-12-15 | 正式发布，含订单+支付+用户模块 | CHANGELOG.md |
+| v1.2.0 | 2025-03-08 | 国际化（英文/日文），多币种支持 | CHANGELOG.md |
+
+[无 git tag 也无 CHANGELOG 时整节写以下内容]
+
+> ⚠️ 待补充（需人工确认）：未发现 git tag 或 CHANGELOG.md，请手动补充历史里程碑
+
+## 未来规划
+
+> ⚠️ 待补充（需人工确认）：未来里程碑需人工规划填写。建议列出：
+> - 下一个版本的目标（功能 / 时间）
+> - 中期（3-6 个月）的主要方向
+> - 长期的愿景或技术债务偿还计划
+
+### 未来里程碑（模板示例）
+
+\`\`\`mermaid
+timeline
+    title 未来规划
+    2025-Q3 : v2.0.0<br/>[待补充] 重构订单服务
+    2025-Q4 : v2.5.0<br/>[待补充] 接入风控系统
+\`\`\`
 ```
 
 ---
