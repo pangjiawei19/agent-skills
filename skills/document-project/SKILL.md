@@ -50,6 +50,23 @@ description: Analyze existing codebase and generate comprehensive project docume
 
 ---
 
+## 全局原则：数据来源
+
+**适用于所有 Step。先读后写，宁缺毋滥。**
+
+1. **只写从代码、配置、构建文件、README、CI 配置中可直接读出或合理推断的内容。**
+2. **找不到来源 → 写 `待补充`**，不要凭经验或示例脑补。
+3. **模板中的具体值（如 `Java 11+`、`./gradlew build`）仅为格式示例，不是默认值**——必须替换为从当前项目读取到的实际值。
+4. **重要断言标注来源**：如 `Java 17 (来源: pom.xml <java.version>)`。
+
+**统一的"待补充"格式**（显式可见，便于人工找到并补上）：
+
+```markdown
+> ⚠️ 待补充（需人工确认）：<此处提示期望内容或推不出的原因>
+```
+
+---
+
 ## 输出路径规范（固定）
 
 本 skill 生成**两层文档结构**：
@@ -202,19 +219,10 @@ git diff <last_commit> HEAD --stat
 
 **跨域影响**：改某个域的代码可能引起其他域的反向索引表需要更新（如新增了一个会被其他域调用的 Service）。这在 Step 3.2 归属判定时顺带处理，不单独建桶。
 
-### 增量更新流程
+### 执行模式导航
 
-1. 读取 `docs/project-overview/README.md` 的 DOC_META + DOMAIN_MAP
-2. 按 0.5 第 3 步得到分桶结果
-3. 对每个非空桶局部执行对应 Step：
-   - `bucket[<domain>]` 非空 → 重跑该域的 Step 2/3，更新 `domains/<domain>/` 下文件；若新增了跨域调用或事件触达其他域，同步更新被调用域 `flows.md` 末尾的反向索引表
-   - `bucket[structural]` 非空 → 重跑 Step 1/4/5，更新 `architecture.md` / `dependencies.md` / `deployment.md`
-   - `bucket[meta]` 非空 → 更新 `project-overview/README.md` 或 `development.md`
-4. 更新 `project-overview/README.md` 头部 DOC_META 锚点（DOMAIN_MAP 通常保持不变，除非 Step 0.5 第 3 步让用户新增了域）
-
-### 全量生成流程
-
-依次执行 Step 1 → 1.5（领域识别，硬停等用户确认） → 2 → 3 → 4 → 5 → 6 → 7，每步完成后更新 Task 状态。
+- **增量更新**：按 Step 0.5 分桶结果对各桶执行对应 Step；完成后更新 `project-overview/README.md` 头部 DOC_META 锚点（DOMAIN_MAP 通常不变，用户新增域时同步更新）。
+- **全量生成**：依次执行 Step 1 → 1.5（硬停等确认） → 2 → 3 → 4 → 5 → 6 → 7，每步完成后更新 Task 状态。
 
 ---
 
@@ -259,7 +267,7 @@ git diff <last_commit> HEAD --stat
 | 目标用户 / 使用场景 | `README.md` 的"Who is this for" / "Use cases" / 权限配置里的角色 | 同上格式，注明"目标用户" |
 | 核心价值 | `README.md` 的 Features / Why / Highlights 节 | 同上格式 |
 
-**重要**：项目背景属于 AI 最容易幻觉的部分（没有强约束的文字）。严格遵守 Step 6.0 原则——读不到就写"待补充"，不要从项目名脑补。
+**重要**：项目背景属于 AI 最容易幻觉的部分（没有强约束的文字）。遵守上方全局原则——读不到就写"待补充"，不要从项目名脑补。
 
 #### 1.4.2 技术栈分类
 
@@ -318,7 +326,7 @@ git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=sh
 
 ### 1.5.2 输出推断结果 + 硬停等用户确认
 
-**这是本 skill 中唯一需要硬停的步骤**。不要擅自跳过或自行写入 DOMAIN_MAP——领域划分是后续所有增量更新的稳定基础，划错一次会长期污染文档。
+**全量生成中此步骤必须硬停等用户确认**。不要擅自跳过或自行写入 DOMAIN_MAP——领域划分是后续所有增量更新的稳定基础，划错一次会长期污染文档。
 
 以下面的格式输出推断结果给用户：
 
@@ -378,9 +386,9 @@ git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=sh
 
 **数量上限**：每个域核心实体 **≤ 10 个**。超出时用末尾表格罗列。
 
-**按域归属**（见路径规范规则 1 — 每个实体归属且仅归属一个域）：
+**按域归属**（归属判定规则见上方归属规则 1）：
 
-- **归属判定**：实体定义文件路径命中哪个域的 `paths` → 归那个域，写入 `docs/domains/<domain>/domain-model.md`
+- 符合规则的实体写入 `docs/domains/<domain>/domain-model.md`
 - **跨域引用检测**：对每个实体用 Grep 统计被引用位置，按引用方文件路径反查 DOMAIN_MAP 得到引用域列表。结果用于两件事：
   1. **归属域的文档中**标注"被 [domain-a, domain-b] 引用"（让读者知道改动影响面）
   2. **引用方的文档中**把该实体作为字段类型时，写链接指向归属域，不复述字段
@@ -423,13 +431,7 @@ git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=sh
 
 **数量上限**：每个域主要流程 **≤ 5 个**。超出时其余端点用表格罗列：`| 端点 | 方法 | 入口 Controller | 简述 |`。
 
-**按域归属**（见路径规范规则 2 — 每个流程归属且仅归属一个域）：
-
-| 流程类型 | 归属域 | 典型信号 |
-|---------|-------|---------|
-| 同步调用链（A → B） | **发起方 A**（入口 Controller 所在域） | HTTP 请求入口、RPC 调用入口 |
-| 事件驱动（B 发事件 → A 消费处理） | **消费方 A**（业务动作发生处） | `@EventListener` / `@KafkaListener` / MQ consumer |
-| 纯编排（Saga / 工作流） | **编排所在域**（代码所在域） | Saga 协调器类、workflow 引擎定义 |
+**按域归属**（归属类型见上方归属规则 2）：
 
 **追踪与归属的执行方式**：
 1. 从入口点开始（Controller / Handler / 事件监听器）
@@ -438,9 +440,7 @@ git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=sh
 4. 识别数据访问、外部调用、事务边界和异常处理
 5. **仅写入归属域的 `flows.md`**，画完整序列图
 
-**跨域序列图约定**（流程涉及其他域时）：
-- 参与者标签：`ServiceName<br/>[<other-domain> 域]`
-- 关键步骤文字加链接：`调用 [PaymentService.charge](../payment/README.md#charge)` 或 `../payment/flows.md#xxx`
+**跨域序列图约定**（原则见上方归属规则 2；参与者示例：`PaymentService<br/>[payment 域]`；链接示例：`调用 [PaymentService.charge](../payment/README.md#charge)`）。
 
 **反向索引表**（本域的 Service 被其他域流程调用时）：
 
@@ -471,9 +471,9 @@ git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=sh
 
 输出格式见 [references/output-templates.md](references/output-templates.md) 的 Step 3 小节。
 
-### 3.5 核心功能聚合（跨域）
+### 3.5 核心功能数据采集（供 Step 6 组装使用）
 
-在完成各域的 Controller/Service 梳理后，聚合成**用户视角**的核心功能清单，写入 `project-overview/README.md` 的"核心功能"节。
+在完成各域的 Controller/Service 梳理后，聚合成**用户视角**的核心功能清单，**记录备 Step 6 写入 `project-overview/README.md`**。
 
 **数据源**（按优先级）：
 1. 各域 Controller 的 REST 端点（如 `POST /api/orders` → "下单"）
@@ -485,12 +485,10 @@ git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=sh
 **写作原则**：
 - **用户视角**：写"下单"、"取消订单"，不写"调用 OrderController.create"
 - **从端点名称推断功能名**，命名歧义时标 `[推断]`
-- 每个功能后加链接到对应域的文档：`[下单](../domains/order/README.md#下单流程)`
+- 每个功能后记录对应域的文档链接：`[下单](../domains/order/README.md#下单流程)`
 - **只列用户能做的动作**，内部调用、管理后台接口另列或省略
 
 **数量控制**：全量核心功能清单 **≤ 20 个**。超出时只留高频 / 高价值的 20 个，其余以"完整端点见各域 README"收尾。
-
-输出格式见 [references/output-templates.md](references/output-templates.md) 的 Step 6 `README.md` 模板。
 
 ---
 
@@ -602,12 +600,9 @@ git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=sh
 
 ## Step 6: 生成完整文档
 
-### 6.0 数据来源原则（⚠️ 必读，防止幻觉）
+### 6.0 数据来源原则
 
-1. **只写从代码、配置、构建文件、README、CI 配置中可直接读出或合理推断的内容**。
-2. **找不到来源 → 写 `待补充（需人工确认）`**，不要凭经验或示例脑补。
-3. **模板中的具体值（如 `Java 11+`、`./gradlew build`）仅为格式示例，不是默认值**——必须替换为从当前项目读取到的实际值。
-4. **重要断言标注来源**：如 `Java 17 (来源: pom.xml <java.version>)`、`启动命令（来源: Dockerfile CMD / README.md#运行）`。
+见上方[全局原则：数据来源](#全局原则数据来源)。Step 6 组装时同样遵循此原则——找不到来源写「待补充」，模板值必须替换为项目实际值。
 
 ### 6.1 可自动生成的章节 vs 需人工补充的章节
 
@@ -629,12 +624,6 @@ git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=sh
 | 部署说明 - 配置说明 | `application-example.yml`、`.env.example`、配置类 | 不要编造配置项 |
 | 开发指南 | `CONTRIBUTING.md`、lint 配置、git hooks、`CODEOWNERS` | 找不到则整节写 `待补充（建议人工编写）` |
 
-**统一的"待补充"格式**（显式可见，便于人工找到并补上）：
-
-```markdown
-> ⚠️ 待补充（需人工确认）：<此处提示期望内容或推不出的原因>
-```
-
 ### 6.2 判断每个域是单文件还是拆分模式
 
 **单文件模式**（默认）：`domains/<x>/README.md` 一个文件装全部内容。
@@ -654,7 +643,7 @@ git log --tags --simplify-by-decoration --pretty='format:%h %D %ad %s' --date=sh
 
 | 文件 | 内容 | 来源 |
 |------|------|------|
-| `README.md` | DOC_META + DOMAIN_MAP + 项目简介（含背景/技术栈/目标用户）+ 核心功能 + 域索引 | Step 1 + 3.5 |
+| `README.md` | DOC_META + DOMAIN_MAP + 项目简介（含背景/技术栈/目标用户）+ 核心功能 + 域索引 | Step 1 + 3.5（3.5 采集数据，此处写入文件） |
 | `architecture.md` | 架构模式 + **系统架构图** + 目录结构 + 领域划分表 + 跨域 ER 主图 | Step 4 |
 | `milestones.md` | 历史里程碑（git tag / CHANGELOG 提取）+ 未来规划（待补充） | Step 1.4.3 |
 | `dependencies.md` | 依赖表格、第三方服务 | Step 5 |
@@ -697,7 +686,7 @@ mkdir -p docs/domains
 mkdir -p docs/domains/<domain>
 ```
 
-**单领域项目特例**：不创建 `docs/domains/`，在 `project-overview/` 下新增 `domain-model.md` 和 `flows.md` 装业务内容（架构/依赖/部署/开发指南仍按 5 文件模板）。
+**单领域项目特例**：见上方路径规范的单领域退化规则（`project-overview/` 下新增 `domain-model.md` 和 `flows.md`，不创建 `docs/domains/`）。
 
 ### 6.5 生成摘要
 
