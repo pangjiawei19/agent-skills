@@ -11,20 +11,30 @@
 
 ## 输出内容
 
-固定生成到 **`docs/project-overview/`** 目录，一章一文件：
+生成**两层文档结构**：项目层 + 领域层。
 
 ```
-docs/project-overview/
-├── README.md              # 入口：项目简介 + DOC_META 锚点 + 总览目录
-├── domain-model.md        # 核心领域模型（ER 图 + 实体详情）
-├── business-flows.md      # 业务流程（序列图 + 状态机）
-├── architecture.md        # 项目结构
-├── dependencies.md        # 外部依赖
-├── deployment.md          # 部署说明
-└── development.md         # 开发指南
+docs/
+├── project-overview/          # 项目层（非业务内容）
+│   ├── README.md              # DOC_META + DOMAIN_MAP 锚点 + 项目简介 + 域索引
+│   ├── architecture.md        # 架构模式、目录结构、领域划分表、跨域 ER 主图
+│   ├── dependencies.md        # 外部依赖
+│   ├── deployment.md          # 部署说明
+│   └── development.md         # 开发指南
+└── domains/                   # 领域层（所有业务内容）
+    ├── README.md              # 领域清单
+    └── <domain>/              # 每个业务域一个子目录
+        ├── README.md          # 领域概览 + 对外接口
+        ├── domain-model.md    # 本域所有实体
+        └── flows.md           # 本域所有流程
+        # 小域可退化为单 README.md
 ```
 
-完整格式示例见 [example-output.md](example-output.md)（⚠️ 虚构示例 + 单文件合并展示）。
+**为什么这样设计**：业务内容全部聚合到 `domains/`，每个域自包含。跨域关系通过链接表达而不是抽共性到全局层——心智模型简单、增量更新无歧义、每次业务改动只影响一个 `domains/<x>/`。
+
+**单领域项目**自动退化为无 `domains/` 的平铺结构。
+
+完整格式示例见 [example-output.md](example-output.md)（⚠️ 虚构示例 + 单文件合并展示；实际产出会按领域拆到 `domains/`）。
 
 ## 支持的项目类型
 
@@ -78,7 +88,33 @@ skill 采用采样分析 + 并行子 agent 策略（SKILL.md "处理大型项目
 
 ### 增量更新是怎么判断的？
 
-skill 在 `docs/project-overview/README.md` 头部写入 `<!-- DOC_META: last_commit=... -->` 锚点。下次运行时对比 git diff，按变更规模（<10% / 10-30% / >30%）和结构性信号（构建文件、顶层目录、入口文件、迁移文件变动）决定增量或提示全量重生成。详见 SKILL.md Step 0。
+skill 在 `docs/project-overview/README.md` 头部写入两个锚点：
+- `<!-- DOC_META: last_commit=... -->` — 上次生成的 commit
+- `<!-- DOMAIN_MAP ... -->` — 代码路径到业务域的映射（YAML）
+
+下次运行时对比 git diff，按变更规模（<10% / 10-30% / >30%）决定是否全量；增量模式下把变更文件按 DOMAIN_MAP 分桶到对应领域，只重扫受影响的文档文件。详见 SKILL.md Step 0。
+
+### 领域是怎么划分的？
+
+首次生成时 skill 会：
+1. 按语言启发式推断（Java 按 package、Node.js 按顶层模块、Monorepo 按 service 等）
+2. 输出推断结果给用户 review（表格形式：域名 / 推断依据 / 覆盖 paths / 核心实体）
+3. **硬停等用户确认或修改**后写入 DOMAIN_MAP，再继续生成
+
+之后增量更新都以 DOMAIN_MAP 为准，不会重新推断。如需调整领域划分，手动编辑 `project-overview/README.md` 头部的 DOMAIN_MAP 即可。
+
+### 项目层和领域层怎么切分？
+
+**项目层**只放非业务的项目级内容（架构、依赖、部署、开发约定）。**所有业务内容都在 `domains/`**。
+
+归属规则（skill 自动执行，防止同一事实在多个域重复）：
+
+- **实体**：每个实体归属且仅归属一个域（定义文件路径命中哪个域 paths 就归哪个域）。被其他域引用时用链接 `../<owning-domain>/domain-model.md#xxx`，不复述字段。
+- **流程**：
+  - 同步调用链 → 归**发起方**（入口 Controller 所在域）
+  - 事件驱动 → 归**消费方**（业务动作发生处）
+  - 纯编排（Saga/工作流）→ 归**编排代码所在域**
+- **反向索引**：被其他域流程调用的接口，在本域 `flows.md` 末尾列表格指向调用方域的流程，不复述流程内容。
 
 ### 项目不是 git 仓库怎么办？
 

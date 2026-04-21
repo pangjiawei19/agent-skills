@@ -1,7 +1,11 @@
 > ⚠️ **虚构示例** — 本文件内容**全部虚构**，仅用于展示文档结构、字段命名、Mermaid 语法、来源标注方式。
 > 不要照搬任何具体值（版本号、业务规则、文件路径、行号、第三方服务）。实际文档每一条内容必须来自真实代码库，找不到来源的写 `待补充（需人工确认）`。遵守 SKILL.md Step 6.0 数据来源原则。
 >
-> ⚠️ **单文件展示** — 本示例为便于阅读合并在一个文件中展示。**实际生成时会拆分到 `docs/project-overview/` 目录下 7 个文件**（`README.md` / `domain-model.md` / `business-flows.md` / `architecture.md` / `dependencies.md` / `deployment.md` / `development.md`），每个一级章节对应一个文件。拆分骨架见 `references/output-templates.md` 的 Step 6 模板。
+> ⚠️ **单文件展示** — 本示例为便于阅读合并在一个文件中展示。**实际生成时会拆分为两层结构**：
+> - 项目层 `docs/project-overview/`（5 个文件）：`README.md` / `architecture.md` / `dependencies.md` / `deployment.md` / `development.md`
+> - 领域层 `docs/domains/<域>/`：每个业务域一个子目录，小域单文件、大域拆 `README.md + domain-model.md + flows.md`
+>
+> 本示例的"业务流程"与"领域模型"章节在实际产出中会按域归属：每个实体归属唯一一个域、每个流程归属唯一一个域（发起方/消费方/编排方），跨域关系通过相对链接表达。完整拆分骨架与模板见 `references/output-templates.md` 的 Step 6。
 >
 > ---
 

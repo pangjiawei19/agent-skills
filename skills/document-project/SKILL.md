@@ -27,8 +27,8 @@ description: Analyze existing codebase and generate comprehensive project docume
 - [example-output.md](example-output.md) — 完整文档示例（虚构项目，仅示意结构）
 
 **加载策略**（按需加载，不要一次全读）：
-- `language-hints.md`：Step 1 识别项目类型后加载对应语言的小节，Step 2 / 3 / 5 复用
-- `output-templates.md`：Step 1 / 2 / 3 / 4 / 5 各自产出前加载对应小节；Step 6 组装时加载 Step 6 骨架
+- `language-hints.md`：Step 1 识别项目类型后加载对应语言的小节，Step 1.5（领域识别）、Step 2 / 3 / 5 复用
+- `output-templates.md`：Step 1-5 各自产出前加载对应小节；Step 6 组装时加载 Step 6 骨架（含 DOMAIN_MAP 格式、全局层 + 领域层模板）
 - `tool-mapping.md`：仅在非 Claude Code 平台运行时需要加载
 
 ## 不适用场景（先判断）
@@ -52,22 +52,61 @@ description: Analyze existing codebase and generate comprehensive project docume
 
 ## 输出路径规范（固定）
 
-本 skill 始终生成到 **`docs/project-overview/`** 目录，采用一章一文件的拆分结构：
+本 skill 生成**两层文档结构**：
+
+- **项目层** `docs/project-overview/`：非业务的项目级内容（架构、依赖、部署、开发约定）
+- **领域层** `docs/domains/<domain>/`：所有业务内容——实体、流程、API 接口，一域一目录
 
 ```
-docs/project-overview/
-├── README.md              # 入口：DOC_META 锚点 + 项目简介 + 总览目录
-├── domain-model.md        # Step 2 输出
-├── business-flows.md      # Step 3 输出
-├── architecture.md        # Step 4 输出
-├── dependencies.md        # Step 5 输出
-├── deployment.md          # 部署说明（Step 6 一部分）
-└── development.md         # 开发指南（Step 6 一部分）
+docs/
+├── project-overview/
+│   ├── README.md              # DOC_META + DOMAIN_MAP 锚点 + 项目简介 + 域索引
+│   ├── architecture.md        # 架构模式、目录结构、领域划分表、ER 主图
+│   ├── dependencies.md        # 外部依赖
+│   ├── deployment.md          # 部署说明
+│   └── development.md         # 开发指南
+└── domains/
+    ├── README.md              # 领域清单
+    └── <domain>/
+        ├── README.md          # 领域概览 + 对外接口（REST / 事件）
+        ├── domain-model.md    # 本域所有实体
+        └── flows.md           # 本域所有流程
+        # 小域可退化为单 README.md（阈值见 Step 6）
+        # API ≥ 20 时可拆出 api.md（可选）
 ```
 
-- **DOC_META 锚点**固定写在 `README.md` 头部
-- 不使用其他路径（不再支持 `docs/PROJECT_DOCUMENTATION.md` 或根目录 `DOCUMENTATION.md`）
-- 一章一文件，增量更新时修改 `domain-model.md` 不影响其他章节，git diff 清晰
+**为什么这样设计**：业务内容全部聚合到 `domains/`，每个域自包含。跨域关系**通过链接**而不是"抽共性到全局层"表达——代价是几个链接跳转，收益是心智模型简单、增量更新无歧义、每次业务改动只影响一个 `domains/<x>/`。
+
+### 三条必守的归属规则
+
+防止同一事实在多个域重复描述导致 drift，Step 2/3 必须按下面规则执行。
+
+**规则 1：实体归属唯一一个域（Owning Domain）**
+
+每个实体归属**且仅归属**一个域，其他域只能**引用**、不能重复定义。
+
+- **归属判定**：实体定义文件路径命中哪个域的 `paths` → 归那个域
+- **跨域引用写法**：被其他域用到时，只写字段名 + 引用链接。示例：Order 实体的 `userId` 字段描述写 `引用 [User](../user/domain-model.md#user)`，不复述 User 的字段
+
+**规则 2：跨域流程归属唯一一个域**
+
+| 流程类型 | 归属域 | 判定依据 |
+|---------|-------|---------|
+| 同步调用链（A → B） | **发起方 A**（入口 Controller 所在域） | 业务语义从发起方起点 |
+| 事件驱动（B 发事件，A 消费并处理） | **消费方 A** | 业务动作发生在 consumer |
+| 纯编排（Saga / 工作流引擎） | **编排所在域**（通常有单独的 workflow/saga 域） | 编排代码的归属域 |
+
+- **跨域序列图约定**：其他域参与者标注为 `ServiceName<br/>[<domain> 域]`，关键步骤文字加链接到被调用域的文档
+- **反向索引表**：当本域的某个 Service 被其他域的流程调用，在本域 `flows.md` 末尾加"被跨域流程调用"表格（只列接口 + 调用方域 + 跨域流程链接，不复述流程内容）
+
+**规则 3：API 清单默认放在 domain README.md**
+
+`domains/<x>/README.md` 的"对外接口"节罗列本域所有 REST 端点、事件发布、事件订阅。单域 API **≥ 20 个**时才拆出独立 `api.md`。
+
+### 其他约定
+
+- **DOC_META 和 DOMAIN_MAP 锚点**都写在 `project-overview/README.md` 头部（格式见 `references/output-templates.md`）
+- **单领域项目**（Step 1.5 识别结果只有 1 个域）退化为无 `domains/` 的平铺结构：`project-overview/` 下新增 `domain-model.md` 和 `flows.md` 装业务内容；DOMAIN_MAP 仍写入（单条目）为未来演化留接口
 
 ---
 
@@ -98,73 +137,83 @@ git rev-parse --is-inside-work-tree 2>/dev/null
 - **不存在** → 走**全量生成模式**
 - **存在** → 进入 0.4 提取锚点
 
-### 0.4 提取上次生成的 commit 锚点
+### 0.4 提取上次生成的 commit 锚点 + DOMAIN_MAP
 
-读取 `docs/project-overview/README.md` 头部的机器可读锚点（`last_commit` 固定 **12 位**短 hash）：
+读取 `docs/project-overview/README.md` 头部的两个机器可读锚点：
 
 ```markdown
 <!-- DOC_META: last_commit=abc123def456, generated=2026-04-13 -->
+
+<!-- DOMAIN_MAP
+order:
+  paths:
+    - src/main/java/com/xxx/order/**
+  entities: [Order, OrderItem]
+shared:
+  entities: [User, Product]
+-->
 ```
 
-- **找到锚点** → 进入 0.5 判断变更规模
-- **未找到锚点**（旧文档未写入） → 提示用户"未找到版本锚点，建议全量重生成"；若用户坚持增量，尝试用 `git log -1 --format='%h' --abbrev=12 -- docs/project-overview/README.md` 推断基准 commit；该命令也返回空则**强制走全量**并告知用户
+- `last_commit` 固定 **12 位**短 hash（非 git 仓库填 `none`）
+- `DOMAIN_MAP` 是 YAML 格式，定义**代码路径 → 业务域**的映射（增量更新的 SoT）
 
-### 0.5 判断变更规模，决定模式
+处理分支：
 
-**判断顺序**（短路逻辑：命中即停，不继续向下判断）：
+- **DOC_META 找到 + DOMAIN_MAP 找到** → 进入 0.5 按域分桶
+- **DOC_META 找到但 DOMAIN_MAP 缺失**（文档是旧版或被手动删） → 提示用户"DOMAIN_MAP 缺失，无法精确定位变更到域；建议全量重生成以重建映射"
+- **DOC_META 未找到** → 提示用户"未找到版本锚点，建议全量重生成"；若用户坚持增量，尝试用 `git log -1 --format='%h' --abbrev=12 -- docs/project-overview/README.md` 推断基准 commit；该命令也返回空则**强制走全量**并告知用户
 
-1. **先判断结构性变更** — 任一命中则提示用户"检测到结构性变更，建议全量重生成"
-2. **再按变更文件占比判断** — 按下表决定模式
+### 0.5 判断变更规模 + 按域分桶
 
-**结构性变更**信号（第 1 步使用，任一命中即视为结构性）：
+**第 1 步：结构性变更检查**（短路逻辑，命中即提示用户"检测到结构性变更，建议全量重生成"）：
 - 构建文件变动（`pom.xml` / `package.json` / `pyproject.toml` / `go.mod` / `Cargo.toml`）
 - 顶层目录新增或删除（如新增 `apps/`、`services/`）
 - 主类 / 入口文件变动
 - 数据库迁移文件新增
+- **DOMAIN_MAP 需要扩展**（第 3 步的 `unknown` 桶非空时）
 
-**变更文件占比**（第 2 步使用）：
+**第 2 步：变更文件占比**：
 
 ```bash
-# 分子：变更文件数
 CHANGED=$(git diff <last_commit> HEAD --name-only | wc -l)
-
-# 分母：源码文件总数（排除依赖、构建产物、lock 文件）
 TOTAL=$(git ls-files | grep -Ev '(^|/)(node_modules|vendor|dist|build|target|\.lock|package-lock\.json|yarn\.lock|pnpm-lock\.yaml|Cargo\.lock|go\.sum)' | wc -l)
-
-# 查看变更概览
 git diff <last_commit> HEAD --stat
 ```
 
-| 占比区间（CHANGED / TOTAL） | 模式 |
-|----------------------------|------|
-| `占比 < 10%` | **增量更新** |
-| `10% ≤ 占比 ≤ 30%` | **增量更新**，但需重新扫描所有受影响章节 |
-| `占比 > 30%` | 提示用户"变更规模较大，建议全量重生成" |
+| 占比（CHANGED / TOTAL） | 模式 |
+|------------------------|------|
+| `< 10%` | **增量更新** |
+| `10%-30%` | **增量更新**（受影响域可能较多，逐个重扫） |
+| `> 30%` | 提示用户"变更规模较大，建议全量重生成" |
+
+**第 3 步：按 DOMAIN_MAP 分桶**（增量更新的核心）：
+
+对 `git diff <last_commit> HEAD --name-only` 的每个文件路径，按 DOMAIN_MAP 分类到以下桶：
+
+| 桶 | 匹配规则 | 影响的文档 |
+|----|---------|----------|
+| `bucket[<domain>]` | 路径命中某 domain 的 `paths` glob | `domains/<domain>/` 下的文件 |
+| `bucket[structural]` | 构建文件、CI、Dockerfile、Makefile、配置根目录 | `project-overview/{architecture,dependencies,deployment}.md` |
+| `bucket[meta]` | README、CONTRIBUTING、lint、commitlint | `project-overview/{README,development}.md` |
+| `bucket[unknown]` | 都不命中 | **需要用户介入**：停下来问"这些文件应该归哪个域？要新增领域还是扩展现有 paths？" |
+
+⚠️ `bucket[unknown]` 非空时**硬停**等用户答复，不要默默跳过——忽略会导致文档盲区越来越大。
+
+**跨域影响**：改某个域的代码可能引起其他域的反向索引表需要更新（如新增了一个会被其他域调用的 Service）。这在 Step 3.2 归属判定时顺带处理，不单独建桶。
 
 ### 增量更新流程
 
-1. **读取 `docs/project-overview/` 下相关文件**，保留未变更章节
-2. **聚焦变更文件**：只对 `git diff <last_commit> HEAD --name-only` 返回的文件执行 Step 1-5 中的相关分析
-3. **按「代码变更 → 文档文件」映射更新对应文件**：
-
-   | 代码变更类型 | 更新的文档文件 |
-   |-------------|--------------|
-   | 实体类 / ORM schema | `domain-model.md` |
-   | Controller / Handler / Service | `business-flows.md` |
-   | 目录结构 / 模块划分 | `architecture.md` |
-   | 构建文件 / 配置文件 | `dependencies.md` |
-   | `Dockerfile` / CI / `Makefile` | `deployment.md` |
-   | `CONTRIBUTING.md` / lint 配置 | `development.md` |
-   | 构建文件中的项目元信息（名字、版本） | `README.md` |
-
-4. **更新 `README.md` 头部锚点**：
-   ```markdown
-   <!-- DOC_META: last_commit=<HEAD commit 12 位>, generated=<今天日期> -->
-   ```
+1. 读取 `docs/project-overview/README.md` 的 DOC_META + DOMAIN_MAP
+2. 按 0.5 第 3 步得到分桶结果
+3. 对每个非空桶局部执行对应 Step：
+   - `bucket[<domain>]` 非空 → 重跑该域的 Step 2/3，更新 `domains/<domain>/` 下文件；若新增了跨域调用或事件触达其他域，同步更新被调用域 `flows.md` 末尾的反向索引表
+   - `bucket[structural]` 非空 → 重跑 Step 1/4/5，更新 `architecture.md` / `dependencies.md` / `deployment.md`
+   - `bucket[meta]` 非空 → 更新 `project-overview/README.md` 或 `development.md`
+4. 更新 `project-overview/README.md` 头部 DOC_META 锚点（DOMAIN_MAP 通常保持不变，除非 Step 0.5 第 3 步让用户新增了域）
 
 ### 全量生成流程
 
-依次执行 Step 1-6，每步完成后用 TaskCreate/TaskUpdate 跟踪进度。
+依次执行 Step 1 → 1.5（领域识别，硬停等用户确认） → 2 → 3 → 4 → 5 → 6 → 7，每步完成后更新 Task 状态。
 
 ---
 
@@ -199,6 +248,59 @@ git diff <last_commit> HEAD --stat
 
 ---
 
+## Step 1.5: 领域识别（⚠️ 硬停等用户确认）
+
+本步只在**全量生成**时执行；增量更新直接使用 DOMAIN_MAP。
+
+### 1.5.1 推断领域划分
+
+按项目类型选择启发式（详见 [references/language-hints.md](references/language-hints.md) 的"领域识别"小节）。核心思路：
+
+- **Java / 按 package**：`com.xxx.<domain>.*` 中的 `<domain>` 段通常就是业务域
+- **Node.js / Python / Go**：`modules/<domain>/` 或 `<domain>/{controller,service}` 结构
+- **Monorepo**：每个 `apps/<name>` 或 `services/<name>` 是一个域
+- **扁平结构**：按 `*Controller` / `*Service` 命名前缀聚类（`OrderController` + `OrderService` → `order` 域）
+
+### 1.5.2 输出推断结果 + 硬停等用户确认
+
+**这是本 skill 中唯一需要硬停的步骤**。不要擅自跳过或自行写入 DOMAIN_MAP——领域划分是后续所有增量更新的稳定基础，划错一次会长期污染文档。
+
+以下面的格式输出推断结果给用户：
+
+```markdown
+## 推断的领域划分
+
+| 领域 | 推断依据 | 覆盖 paths | 归属本域的核心实体 |
+|------|---------|-----------|-------------------|
+| order | `com.xxx.order` package 下有 12 个类，含 OrderController/OrderService | `src/main/java/com/xxx/order/**` | Order, OrderItem |
+| payment | `com.xxx.payment` package 下有 5 个类 | `src/main/java/com/xxx/payment/**` | Payment, Refund |
+| user | `com.xxx.user` 下有 UserController/UserService（被 order、payment 引用） | `src/main/java/com/xxx/user/**` | User, UserProfile |
+
+## 跨域引用预览（供参考，不改变归属）
+- `User`（归 user 域）被 order、payment 引用 → order、payment 的文档通过链接引用
+- `Product`（归 catalog 域）被 order、inventory 引用
+
+**请确认或修改上述划分后回复我**，例如：
+- "确认"
+- "把 trade 目录也划到 order 域"
+- "UserProfile 应该归 account 域而不是 user"
+- "inventory 应该单独成域，paths 是 xxx"
+
+确认后我会写入 DOMAIN_MAP 并继续生成文档。
+```
+
+然后**停止后续 Step**，等待用户回复。不要说"我先继续 Step 2，后面再调整"——后续步骤依赖 DOMAIN_MAP。
+
+### 1.5.3 单领域项目
+
+如果推断只有 1 个业务域（常见于小型 CLI 工具、单用途微服务），告知用户"本项目识别为单领域，将生成平铺结构（无 `domains/` 子目录）"，让用户确认即可。DOMAIN_MAP 仍写入（单条目），为未来演化留接口。
+
+### 1.5.4 用户回复后写入 DOMAIN_MAP
+
+用户确认/修改后，按最终版 DOMAIN_MAP 继续执行 Step 2。DOMAIN_MAP 将在 Step 6 写入 `project-overview/README.md` 头部。
+
+---
+
 ## Step 2: 领域模型提取
 
 ### 2.1 定位实体类
@@ -209,21 +311,27 @@ git diff <last_commit> HEAD --stat
 
 识别主键/外键、一对多/多对多、继承、组合关系。优先使用框架注解（`@OneToMany`、`gorm` 标签、Prisma schema 等）作为事实来源。
 
-### 2.3 筛选核心实体
+### 2.3 筛选核心实体 + 按域归属
 
-大项目可能有 100+ 实体，全部详述会压垮 context 也无必要。按以下规则筛选**核心实体**：
+**先筛选核心实体**（大项目可能有 100+ 实体，全量详述会压垮 context）：
 
 **纳入核心实体的条件（满足任一）**：
 - 被 ≥ 2 个 Service / Controller 直接操作（用 Grep 统计引用次数）
-- 在代码中作为 `@OneToMany` / `@ManyToOne` / `@ManyToMany` 等关系的**主表或从表出现 ≥ 2 次**（从关系注解统计，不是从 ER 图反推）
+- 在代码中作为 `@OneToMany` / `@ManyToOne` / `@ManyToMany` 等关系的**主表或从表出现 ≥ 2 次**
 - 是聚合根（DDD 项目）或 `@Entity` 标注为主表
 - 字段数 ≥ 5（小的 join 表、枚举表一般不是核心）
 
-**数量上限**：核心实体通常控制在 **10-15 个**。超出时：
-- TOP 10-15 按上述格式详述
-- 其余实体用精简表格附在末尾：`| 实体 | 用途 | 来源文件 |`
+**数量上限**：每个域核心实体 **≤ 10 个**。超出时用末尾表格罗列。
 
-**筛选不到实体时**（如无 ORM 的项目）：转而分析主要数据结构（DTO、Value Object、Response 类型），标题改为"核心数据结构"。
+**按域归属**（见路径规范规则 1 — 每个实体归属且仅归属一个域）：
+
+- **归属判定**：实体定义文件路径命中哪个域的 `paths` → 归那个域，写入 `docs/domains/<domain>/domain-model.md`
+- **跨域引用检测**：对每个实体用 Grep 统计被引用位置，按引用方文件路径反查 DOMAIN_MAP 得到引用域列表。结果用于两件事：
+  1. **归属域的文档中**标注"被 [domain-a, domain-b] 引用"（让读者知道改动影响面）
+  2. **引用方的文档中**把该实体作为字段类型时，写链接指向归属域，不复述字段
+- **路径未命中任何域的实体**（少见，如 shared lib 下的通用模型）：Step 1.5 硬停时用户已确认归属，按确认结果走；或新增一个 `shared-lib` 域装这类代码
+
+**筛选不到实体时**（如无 ORM 的 CLI 项目）：转而分析主要数据结构（DTO、Value Object、Response 类型），标题改为"核心数据结构"。
 
 ### 2.4 记录核心实体
 
@@ -247,9 +355,9 @@ git diff <last_commit> HEAD --stat
 
 涵盖：REST API、GraphQL、消息队列消费、定时任务、事件处理、gRPC。
 
-### 3.2 筛选主要业务流程
+### 3.2 筛选主要业务流程 + 按域归属
 
-大项目可能有 50+ Controller 方法，全部画序列图不现实。按以下规则筛选：
+**先筛选主要流程**（大项目可能有 50+ Controller 方法，全部画序列图不现实）：
 
 **纳入主要流程的条件（满足任一）**：
 - 围绕核心实体的**创建 / 状态变更**（如"创建订单"、"支付"、"审核通过"）
@@ -258,16 +366,40 @@ git diff <last_commit> HEAD --stat
 - 涉及**状态机**（订单状态、审批流等）
 - 涉及**分布式锁 / 事务边界**
 
-**数量上限**：主要流程通常控制在 **5-8 个**。超出时：
-- TOP 5-8 画序列图 + 步骤说明
-- 其余业务端点用精简表格罗列：`| 端点 | 方法 | 入口 Controller | 简述 |`
+**数量上限**：每个域主要流程 **≤ 5 个**。超出时其余端点用表格罗列：`| 端点 | 方法 | 入口 Controller | 简述 |`。
 
-**追踪每个流程**：
-1. 从入口点开始（Controller / Handler）
-2. 追踪 Service 层调用（Grep 调用链）
-3. 识别数据访问层（Repository / DAO / ORM）
-4. 记录外部调用（第三方 API、消息队列）
-5. 标注事务边界和异常处理
+**按域归属**（见路径规范规则 2 — 每个流程归属且仅归属一个域）：
+
+| 流程类型 | 归属域 | 典型信号 |
+|---------|-------|---------|
+| 同步调用链（A → B） | **发起方 A**（入口 Controller 所在域） | HTTP 请求入口、RPC 调用入口 |
+| 事件驱动（B 发事件 → A 消费处理） | **消费方 A**（业务动作发生处） | `@EventListener` / `@KafkaListener` / MQ consumer |
+| 纯编排（Saga / 工作流） | **编排所在域**（代码所在域） | Saga 协调器类、workflow 引擎定义 |
+
+**追踪与归属的执行方式**：
+1. 从入口点开始（Controller / Handler / 事件监听器）
+2. 按入口文件路径 + DOMAIN_MAP 判定归属域
+3. 追踪 Service 调用链（Grep 每层调用目标），记录涉及的**其他域**
+4. 识别数据访问、外部调用、事务边界和异常处理
+5. **仅写入归属域的 `flows.md`**，画完整序列图
+
+**跨域序列图约定**（流程涉及其他域时）：
+- 参与者标签：`ServiceName<br/>[<other-domain> 域]`
+- 关键步骤文字加链接：`调用 [PaymentService.charge](../payment/README.md#charge)` 或 `../payment/flows.md#xxx`
+
+**反向索引表**（本域的 Service 被其他域流程调用时）：
+
+在被调用域的 `flows.md` 末尾追加一节：
+
+```markdown
+## 被跨域流程调用
+
+| 本域接口 | 调用方域 | 跨域流程 |
+|---------|---------|---------|
+| `PaymentService.charge` | order | [下单支付](../order/flows.md#下单支付) |
+```
+
+这样被调用域读者能知道"我的代码被哪些跨域流程依赖"，改 API 前会去看影响面。**不要在被调用域重复画这个跨域流程的序列图**——权威只在归属域一份。
 
 ### 3.3 识别状态机
 
@@ -319,6 +451,15 @@ git diff <last_commit> HEAD --stat
 
 记录包/模块职责划分、公共组件、配置管理方式、测试代码组织。
 
+### 4.4 渲染领域划分表 + ER 主图
+
+在 `architecture.md` 里新增"领域划分"小节，包含两部分：
+
+1. **领域划分表**：将 Step 1.5 确认的 DOMAIN_MAP 渲染为表格（域名 / paths / 核心实体 / 一句话职责）
+2. **跨域 ER 主图**（Mermaid `erDiagram`）：**只画涉及跨域引用的实体关系**（如 Order → User、Payment → User），域内实体细节留给各域的 `domain-model.md`
+
+目的：让读 architecture.md 的人一眼看到目录结构、业务域划分、以及跨域实体关系这三件事。不画全量 ER（全量在各域内各自画），避免这张图随实体增加而失控。
+
 输出格式见 [references/output-templates.md](references/output-templates.md) 的 Step 4 小节。
 
 ---
@@ -364,44 +505,81 @@ git diff <last_commit> HEAD --stat
 | 章节 | 数据来源 | 找不到来源时 |
 |------|---------|------------|
 | 项目简介 | 构建文件 + README | 从代码推断，标注 `[推断]` |
-| 核心领域模型 | 实体类代码 + 注解 | **字段级**：略过无法确认的字段（保留实体骨架）；**实体级**：若核心字段（主键/外键/关键业务字段）都无法确定，降级到"次要实体"表格（见 Step 2.4 降级规则） |
+| 核心领域模型 | 实体类代码 + 注解 | **字段级**：略过无法确认的字段（保留实体骨架）；**实体级**：若核心字段都无法确定，降级到"次要实体"表格 |
 | 业务流程 | Controller + Service 调用链 | 只画能追踪到的部分，标注 `[部分流程未覆盖]` |
-| 项目结构 | 目录扫描 | 客观陈述，无需推断 |
+| 项目结构 | 目录扫描 + DOMAIN_MAP | 客观陈述，无需推断 |
 | 外部依赖 | 构建文件 + 配置文件 | 无则不列 |
-| **部署说明 - 环境要求** | 构建文件、`Dockerfile`、`docker-compose.yml`、CI 配置 | 未声明组件写 `待补充` |
-| **部署说明 - 启动步骤** | `README`、`Makefile`、`package.json scripts`、`Dockerfile CMD`、CI workflow | 找不到则写 `待补充（未在代码库中发现启动脚本）` |
-| **部署说明 - 配置说明** | `application-example.yml`、`.env.example`、配置类 | 不要编造配置项 |
-| **开发指南** | `CONTRIBUTING.md`、`.editorconfig`、lint 配置、git hooks、`CODEOWNERS` | 找不到则整节写 `待补充（建议人工编写）` |
+| 部署说明 - 环境要求 | 构建文件、`Dockerfile`、`docker-compose.yml`、CI | 未声明组件写 `待补充` |
+| 部署说明 - 启动步骤 | `README`、`Makefile`、`scripts`、`CMD`、CI workflow | 找不到则写 `待补充（未在代码库中发现启动脚本）` |
+| 部署说明 - 配置说明 | `application-example.yml`、`.env.example`、配置类 | 不要编造配置项 |
+| 开发指南 | `CONTRIBUTING.md`、lint 配置、git hooks、`CODEOWNERS` | 找不到则整节写 `待补充（建议人工编写）` |
 
-### 6.2 组装并拆分输出
+### 6.2 判断每个域是单文件还是拆分模式
 
-按 [references/output-templates.md](references/output-templates.md) 的 Step 6 拆分骨架，将 Step 1-5 的产出 + 部署说明/开发指南**分别写入** `docs/project-overview/` 下的 7 个文件：
+**单文件模式**（默认）：`domains/<x>/README.md` 一个文件装全部内容。
 
-| 文件 | 内容 | 来自 |
+**拆分模式**触发阈值（任一命中则拆为 `README.md + domain-model.md + flows.md`）：
+- 本域核心实体 ≥ 4 个需要详述
+- 本域主要流程 ≥ 3 个需要序列图
+- 预估单文件会超过 400 行
+
+**为什么设阈值**：小域拆成 3 个空文件比一个简洁的 README 更难读；大域塞进一个文件又会让人滚屏找不到。阈值让文档密度自适应。
+
+### 6.3 组装并写入
+
+按 [references/output-templates.md](references/output-templates.md) 的 Step 6 骨架，把 Step 1-5 产出按下表分发：
+
+**项目层**（`docs/project-overview/`，5 个文件）：
+
+| 文件 | 内容 | 来源 |
 |------|------|------|
-| `README.md` | DOC_META 锚点 + 项目简介 + 总览目录（链接到其他章节） | Step 1 |
-| `domain-model.md` | 核心领域模型、ER 图、实体详情、次要实体表格 | Step 2 |
-| `business-flows.md` | 主要业务流程序列图 + 状态机 + 其他端点表格 | Step 3 |
-| `architecture.md` | 架构模式、目录结构、模块说明 | Step 4 |
+| `README.md` | DOC_META + DOMAIN_MAP 锚点 + 项目简介 + 域索引 | Step 1 |
+| `architecture.md` | 架构模式 + 目录结构 + 领域划分表 + 跨域 ER 主图 | Step 4 |
 | `dependencies.md` | 依赖表格、第三方服务 | Step 5 |
 | `deployment.md` | 环境要求、配置说明、启动步骤 | Step 6 |
 | `development.md` | 本地开发、代码规范、提交规范、FAQ | Step 6 |
 
-**`README.md` 头部必须写入机器可读锚点**（`last_commit` 固定 12 位 hash，非 git 仓库填 `none`）：
+**领域层**（`docs/domains/`）：
+
+| 文件 | 内容 |
+|------|------|
+| `domains/README.md` | 领域清单（表格：域名 / 职责 / 核心实体 / 文档链接） |
+| `domains/<X>/README.md`（单文件模式） | 领域概览 + 对外接口 + 本域实体 + 本域流程 |
+| `domains/<X>/README.md`（拆分模式） | 领域概览 + 对外接口 + 实现位置 + 章节链接 |
+| `domains/<X>/domain-model.md`（拆分模式） | 本域所有实体详情 |
+| `domains/<X>/flows.md`（拆分模式） | 本域所有流程 + 状态机 + 反向索引表 |
+| `domains/<X>/api.md`（可选，API ≥ 20 时） | 完整 API 清单 |
+
+**`project-overview/README.md` 头部必须同时写入两个锚点**：
 
 ```markdown
-<!-- DOC_META: last_commit=abc123def456, generated=2026-04-13 -->
+<!-- DOC_META: last_commit=abc123def456, generated=2026-04-21 -->
+
+<!-- DOMAIN_MAP
+<Step 1.5 确认的映射，YAML 格式>
+-->
 ```
 
-**章节间互链**：各文件之间用相对链接跳转，如 `README.md` 目录项链接到 `./domain-model.md`；`business-flows.md` 提到某实体时链接到 `./domain-model.md#user-用户`。
+**章节间互链规则**：
+- `project-overview/README.md` 目录项链接到本层其他文件 + `../domains/README.md`
+- 每个 `domains/<x>/` 下文件头部加"回到：[领域清单](../README.md) · [项目总览](../../project-overview/README.md)"
+- **跨域实体引用**：`../<other-domain>/domain-model.md#entity-name`（单文件模式下锚点在 `README.md`）
+- **跨域流程引用**：`../<other-domain>/flows.md#flow-name`（单文件模式下锚点在 `README.md`）
 
-### 6.3 先建目录再写入
+### 6.4 先建目录再写入
 
-写入前先创建目录：`mkdir -p docs/project-overview`（或等价的文件创建能力）。
+```bash
+mkdir -p docs/project-overview
+mkdir -p docs/domains
+# 对每个域：
+mkdir -p docs/domains/<domain>
+```
 
-### 6.4 生成摘要
+**单领域项目特例**：不创建 `docs/domains/`，在 `project-overview/` 下新增 `domain-model.md` 和 `flows.md` 装业务内容（架构/依赖/部署/开发指南仍按 5 文件模板）。
 
-给用户一段简短摘要：核心功能、主要技术栈、业务流程数量、核心实体数量、文档保存位置。
+### 6.5 生成摘要
+
+给用户一段简短摘要：核心功能、主要技术栈、识别出的业务域数量及名称、每域实体/流程数量、文档保存位置。
 
 ---
 
@@ -413,7 +591,7 @@ git diff <last_commit> HEAD --stat
 
 防止 AI 为了格式好看而编造行号 / 文件路径。
 
-1. 从 `business-flows.md` 和 `domain-model.md` 随机抽取 **5 条 `来源: xxx.java:45` 形式的引用**
+1. 从各 `domains/<x>/` 下的流程与实体文档中随机抽取 **5 条 `来源: xxx.java:45` 形式的引用**
 2. 对每条引用：
    - 用 `Glob` 或 `Read` 确认**文件存在**
    - 用 `Read` 读取**行号附近的代码**（±5 行），确认与说明匹配
@@ -427,18 +605,28 @@ git diff <last_commit> HEAD --stat
 
 ### 7.3 结构完整性
 
-- [ ] `docs/project-overview/` 下 7 个文件都已生成（README / domain-model / business-flows / architecture / dependencies / deployment / development）
-- [ ] `README.md` 头部已写入 `<!-- DOC_META: last_commit=..., generated=... -->` 锚点（非 git 仓库填 `none`）
-- [ ] `README.md` 的目录列表链接到其他 6 个章节文件，链接可点击（相对路径正确）
+- [ ] `docs/project-overview/` 下 5 个文件都已生成（README / architecture / dependencies / deployment / development）
+- [ ] `project-overview/README.md` 头部同时写入 `<!-- DOC_META: ... -->` 和 `<!-- DOMAIN_MAP ... -->` 锚点
+- [ ] 多领域项目：`docs/domains/README.md` + 每个 `domains/<X>/README.md` 都已生成
+- [ ] 单领域项目：退化结构正确（无 `docs/domains/`，`project-overview/` 下含 `domain-model.md` 和 `flows.md`）
 
-### 7.4 内容质量
+### 7.4 链接完整性（防幻觉关键项，必须实际工具验证）
 
-- [ ] 所有章节都有实质内容或明确标注「待补充（需人工确认）」，没有空壳占位符
+- [ ] DOMAIN_MAP 中所有 `paths` glob 都能 Glob 到至少 1 个实际文件（paths 失效会让增量更新错乱）
+- [ ] `project-overview/README.md` 的目录链接到的文件**都存在**
+- [ ] 每个 `domains/<X>/` 下文件头部的"回到"链接正确（两条：领域清单、项目总览）
+- [ ] 跨域引用链接（`../<other-domain>/domain-model.md#xxx` 或 `../<other-domain>/flows.md#xxx`）随机抽查 3 条：目标文件存在且锚点存在
+- [ ] 若存在跨域调用，**反向索引表**已生成在被调用域的 `flows.md` 末尾
+
+### 7.5 内容质量
+
+- [ ] 所有章节有实质内容或明确标注「待补充（需人工确认）」，没有空壳占位符
 - [ ] 所有 Mermaid 图表语法正确（参与者 / 状态 / 关系名称无错字）
-- [ ] 没有出现 `example-output.md` 中的虚构值（如 `Spring Boot 2.7.5`、`ORD{yyyyMMddHHmmss}{随机4位}`、"连续登录失败 5 次锁定"等）被当作当前项目事实写入
-- [ ] 核心实体数量 ≤ 15，主要流程数量 ≤ 8；超出部分已移入表格罗列
+- [ ] 没有出现 `example-output.md` 中的虚构值被当作当前项目事实写入
+- [ ] 单域核心实体 ≤ 10、主要流程 ≤ 5；超出部分已移入表格罗列
+- [ ] 跨域 ER 主图只画涉及跨域引用的实体关系，不含域内细节
 
-### 7.5 格式细节
+### 7.6 格式细节
 
 - [ ] 专业术语使用一致（同一概念不用多种译法）
 - [ ] 中英文混排时英文词前后有空格

@@ -11,6 +11,33 @@
 - `build.gradle` 含 `org.springframework.boot` 插件
 - 主类带 `@SpringBootApplication`
 
+### 领域识别（Step 1.5 用）
+
+**首选信号**：package 路径 `com.<company>.<project>.<domain>.*`，其中 `<domain>` 段通常就是业务域名。
+
+```bash
+# 扫描所有业务 package（过滤基础层）
+# 常见"非业务 package"：config, common, util, infrastructure, gateway
+```
+
+**推断步骤**：
+1. 找到主包（`@SpringBootApplication` 所在包的父包，如 `com.xxx.shop`）
+2. 列出主包下的所有子 package（深度 1）
+3. 过滤掉 `config` / `common` / `util` / `infrastructure` / `gateway` / `shared` 等基础 package
+4. 剩下的每个子 package 推断为一个业务域
+
+**次要信号**（主信号不明显时）：
+- 扁平项目：按 `*Controller` / `*Service` 前缀聚类（`OrderController` + `OrderService` + `OrderRepository` → `order`）
+- DDD 项目：`domain/` 或 `aggregate/` 子目录每个子项是一个聚合 = 一个域
+
+**典型 paths 写法**：
+```yaml
+order:
+  paths:
+    - src/main/java/com/xxx/shop/order/**
+    - src/test/java/com/xxx/shop/order/**
+```
+
 ### 实体定位
 - 目录：`**/entity/**`、`**/model/**`、`**/domain/**`
 - 注解：`@Entity`、`@Table`、`@Document`（MongoDB）
@@ -41,6 +68,25 @@
 - `package.json` 含 `express` / `@nestjs/core` / `koa` / `fastify`
 - 入口：`index.js` / `app.js` / `server.js` / `src/main.ts`（NestJS）
 
+### 领域识别（Step 1.5 用）
+
+**首选信号**：顶层功能目录。
+- NestJS：`src/<module>/` 每个子目录通常一个 Module，对应一个业务域（`src/order/`、`src/payment/`）
+- Express：`src/modules/<domain>/` 或 `src/features/<domain>/` 结构
+- 扁平 Express：按 `routes/<domain>.js` + `services/<domain>.js` 文件名聚类
+
+**过滤非业务目录**：`common` / `shared` / `utils` / `config` / `middlewares` / `infrastructure`。
+
+**NestJS Module 识别**：每个 `*.module.ts` 文件所在目录 = 一个域（除非是 `AppModule` 或明显的基础模块）。
+
+**典型 paths**：
+```yaml
+order:
+  paths:
+    - src/order/**
+    - src/orders/**  # 单复数都要考虑
+```
+
 ### 实体 / 模型定位
 - **Mongoose**: `**/models/**`、`mongoose.Schema` / `@Schema()`（NestJS + Mongoose）
 - **Sequelize / TypeORM**: `**/entities/**`、`@Entity()`、`@Column()`
@@ -69,6 +115,28 @@
 ### 项目信号
 - `pyproject.toml` / `requirements.txt` / `setup.py`
 - `manage.py`（Django）、`app.py` / `main.py`（Flask/FastAPI）
+
+### 领域识别（Step 1.5 用）
+
+**Django**：每个 app（`manage.py startapp` 创建）通常就是一个业务域。扫描 `INSTALLED_APPS` 里的本地 app（过滤 `django.contrib.*` 等第三方）。
+
+**FastAPI / Flask**：
+- 首选 `app/<domain>/` 或 `src/<domain>/` 顶层子目录
+- `routers/<domain>.py` + `models/<domain>.py` + `services/<domain>.py` 命名聚类
+
+**过滤非业务目录**：`core` / `common` / `utils` / `config` / `middleware` / `deps`。
+
+**典型 paths**：
+```yaml
+order:
+  paths:
+    - app/order/**
+    - app/orders/**
+# Django
+order:
+  paths:
+    - order/**  # Django app 在项目根
+```
 
 ### 实体 / 模型定位
 - **Django**: `**/models.py`、`models.Model`
@@ -99,6 +167,24 @@
 - `go.mod` 存在
 - 入口：`main.go` 或 `cmd/*/main.go`
 
+### 领域识别（Step 1.5 用）
+
+**首选信号**：
+- `internal/<domain>/` 子包（Go 项目惯例，每个子包一个域）
+- `pkg/<domain>/`（对外导出的域）
+- DDD 项目：`internal/domain/<aggregate>/`
+- 微服务：`cmd/<service-name>/` 每个入口一个域（跨服务时每个服务单独处理）
+
+**过滤非业务目录**：`config` / `common` / `utils` / `infra` / `middleware` / `pkg/errors` 等。
+
+**典型 paths**：
+```yaml
+order:
+  paths:
+    - internal/order/**
+    - internal/domain/order/**
+```
+
 ### 实体 / 模型定位
 - `**/model/**`、`**/entity/**`、`**/domain/**`
 - `struct` 定义 + GORM 标签 `gorm:"..."`
@@ -128,6 +214,15 @@
 - `Cargo.toml` 存在
 - 入口：`src/main.rs`（binary）或 `src/lib.rs`（library）
 
+### 领域识别（Step 1.5 用）
+
+**首选信号**：
+- 模块目录 `src/<domain>/mod.rs` 或 `src/<domain>.rs`
+- Workspace 多 crate：每个 `<workspace-member>` 可能是一个域
+- DDD 项目：`src/domain/<aggregate>/`
+
+**过滤非业务模块**：`error` / `util` / `common` / `config` / `prelude`。
+
 ### 实体 / 模型定位
 - `**/models/**`、`**/entities/**`
 - `struct` + `#[derive(...)]`（Serde、Diesel、SeaORM）
@@ -156,7 +251,27 @@
 - `go.work`、Gradle `settings.gradle` 含多 `include`
 - Maven 父 `pom.xml` 含 `<modules>`
 
-**处理策略**：
+### 领域识别（Step 1.5 用）
+
+Monorepo 天然按 service/package 分域：**每个顶层子项目 ≈ 一个域**。
+
+```yaml
+order-service:
+  paths:
+    - services/order-service/**
+payment-service:
+  paths:
+    - services/payment-service/**
+shared-libs:
+  paths:
+    - packages/common/**
+    - packages/types/**
+  # shared-libs 是基础设施性质，不作为业务域；放到 shared 或单独列出不进 domains/
+```
+
+**例外**：如果单个子项目内部业务复杂（如一个大 monolith service），仍需在该子项目内部继续按 package 做领域划分。
+
+### 处理策略
 1. 先在 Step 1 列出所有子模块及其角色
 2. Step 2-5 分别针对每个**核心**子模块执行（非核心可合并描述）
 3. 优先使用**并行派发子 agent**（见 SKILL.md "处理大型项目"），每个 agent 负责一个模块
