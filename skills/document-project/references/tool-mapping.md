@@ -14,12 +14,9 @@
 | 编辑文件 | `Edit` | `edit` | `Edit` | `replace` | 差异补丁 |
 | 派发子任务（并行分析） | `Agent`（subagent_type=Explore） | subagent | Task | `dispatch_agent` | 子 agent 调用 |
 
-## 不存在于 Claude Code 的"语义搜索"
+## 语义级探索
 
-本 skill 早期版本提到的 `SemanticSearch` 工具**在 Claude Code 中并不存在**。语义搜索的等价做法：
-
-- **Claude Code**：使用 `Agent` 工具派发 `subagent_type=Explore` 子 agent，让它通过 Grep/Glob/Read 组合完成语义级探索
-- **其他平台**：如果平台内置向量检索 / 语义搜索工具（如 VS Code 的 `codebase` 工具），可直接使用；否则同样用"关键字搜索 + 读取 + 推断"三步法
+Claude Code 没有独立的"语义搜索"工具。需要开放式探索（如 "Where are entity classes?"）时，用 `Agent` + `subagent_type=Explore` 派发子 agent，让它通过 Grep/Glob/Read 组合完成。其他平台若有内置向量检索则直接使用；否则同样"关键字搜索 + 读取 + 推断"。
 
 ## 使用原则
 

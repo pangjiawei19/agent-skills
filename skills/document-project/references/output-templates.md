@@ -1,217 +1,18 @@
 # 输出格式模板
 
-本文件集中存放 `SKILL.md` 中各 Step 的 markdown 输出样板。当你在执行对应步骤需要具体格式时，加载本文件查阅。
+本文件集中存放 `SKILL.md` Step 7 组装阶段的 markdown 骨架。
 
-> ⚠️ 所有示例中的具体值（项目名、字段名、版本号、业务规则）**仅为格式示意**，必须替换为从当前项目实际读取到的内容。找不到来源的条目写 `待补充（需人工确认）`。
+> ⚠️ 所有示例中的具体值（项目名、字段名、版本号、业务规则）**仅为格式示意**，必须替换为从当前项目实际读取到的内容。找不到来源写 `待补充（需人工确认）`。
 
----
-
-## Step 1 输出模板：项目简介
-
-```markdown
-# [项目名称]
-
-## 项目简介
-- **项目类型**: [Web应用 / 微服务 / 库 / CLI 工具等]
-- **技术栈**: [主要技术栈，来源: 构建文件]
-- **版本**: [当前版本，来源: 构建文件]
-- **构建工具**: [Maven / Gradle / npm / pnpm / cargo 等]
-
-## 项目目标
-[从 README 或代码推断的项目目标和用途。若纯推断，标注 [推断]]
-```
+> ⚠️ **跨域链接统一用 `../<other-domain>/README.md#<anchor>`**（见 SKILL.md 全局原则-跨域链接）。拆分模式下 `README.md` 需保留实体/流程跳转段，让锚点始终可达。
 
 ---
 
-## Step 2 输出模板：核心领域模型
+## 项目层
+
+### `docs/project-overview/README.md`（入口）
 
 ```markdown
-## 核心领域模型
-
-### 实体关系图
-\`\`\`mermaid
-erDiagram
-    User ||--o{ Order : places
-    Order ||--|{ OrderItem : contains
-    Product ||--o{ OrderItem : "ordered in"
-\`\`\`
-
-### 核心实体
-
-#### User (用户)
-- **用途**: 系统用户账户管理
-- **来源文件**: `entity/User.java`
-- **关键字段**:
-  - `id`: 用户唯一标识
-  - `username`: 用户名
-  - `email`: 邮箱地址
-  - `role`: 用户角色（ADMIN/USER）
-- **业务规则**（仅列出代码中可验证的规则）:
-  - 用户名必须唯一（来源: `@Column(unique = true)`）
-  - 邮箱需要验证（来源: `EmailVerificationService` 调用）
-- **关联关系**:
-  - 一个用户可以有多个订单（`@OneToMany`）
-
-[对每个核心实体重复此格式]
-```
-
----
-
-## Step 3 输出模板：业务流程
-
-```markdown
-## 业务流程
-
-### 用户注册流程
-**入口**: `AuthController.register()` (POST /api/register)
-
-\`\`\`mermaid
-sequenceDiagram
-    participant Client
-    participant AuthController
-    participant UserService
-    participant UserRepository
-    participant EmailService
-
-    Client->>AuthController: POST /api/register
-    AuthController->>UserService: registerUser(dto)
-    UserService->>UserRepository: findByEmail(email)
-    UserRepository-->>UserService: null
-    UserService->>UserRepository: save(user)
-    UserService->>EmailService: sendVerificationEmail(user)
-    EmailService-->>UserService: success
-    UserService-->>AuthController: UserDTO
-    AuthController-->>Client: 201 Created
-\`\`\`
-
-**关键步骤说明**（仅记录代码中可追踪的逻辑）:
-1. **邮箱唯一性检查**: 来源 `UserService.java:45`
-2. **密码加密**: 使用 BCrypt，来源 `UserService.java:52`
-3. **发送验证邮件**: 异步，来源 `@Async` 注解
-4. **事务管理**: `@Transactional` 范围为整个方法
-
-**异常处理**（来源: `GlobalExceptionHandler` 及方法签名）:
-- `EmailAlreadyExistsException`: 邮箱已被注册
-- `EmailSendFailureException`: 邮件发送失败（记录日志但不回滚）
-
-[对每个主要业务流程重复此格式]
-```
-
----
-
-## Step 4 输出模板：项目结构
-
-```markdown
-## 项目结构
-
-### 架构模式
-本项目采用 **[分层架构 / 六边形 / 微服务 / 模块化单体]** 模式。
-判断依据: [目录结构 / 包命名 / 关键注解]
-
-### 目录结构
-\`\`\`
-[使用 Glob 扫描得到的真实目录树，深度 2-3 层]
-\`\`\`
-
-### 模块说明
-
-#### [层次/模块名]
-- **职责**: [从代码读取的真实职责]
-- **规范**: [从代码中归纳出的规范，如注解使用、返回类型]
-
-[继续描述其他层次]
-```
-
----
-
-## Step 5 输出模板：外部依赖
-
-```markdown
-## 外部依赖
-
-### 核心框架依赖
-
-| 依赖 | 版本 | 用途 |
-|------|------|------|
-| [框架名] | [版本] | [用途] |
-
-### 数据存储
-
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| [数据库] | [版本] | [用途，来源: 配置文件] |
-
-### 第三方服务
-
-#### [服务名]
-- **用途**: [用途]
-- **配置**: [配置文件位置和 key 前缀]
-- **使用位置**: [调用代码文件]
-
-### 工具库
-
-| 依赖 | 版本 | 用途 |
-|------|------|------|
-
-### 开发和测试
-
-| 依赖 | 版本 | 用途 |
-|------|------|------|
-```
-
----
-
-## Step 6 输出模板：两层文档骨架
-
-文档拆分到 `docs/project-overview/`（全局层）和 `docs/domains/<X>/`（领域层）。下面按文件给出模板。
-
-### DOMAIN_MAP 格式
-
-写入 `project-overview/README.md` 头部，紧跟 DOC_META 之后。YAML 内容用 HTML 注释包裹，对渲染不可见但可被 skill 解析。
-
-```markdown
-<!-- DOC_META: last_commit=abc123def456, generated=2026-04-21 -->
-
-<!-- DOMAIN_MAP
-order:
-  paths:
-    - src/main/java/com/xxx/order/**
-    - src/main/java/com/xxx/trade/**
-  entities: [Order, OrderItem, OrderAddress]
-  responsibility: 订单创建、状态流转、订单查询
-payment:
-  paths:
-    - src/main/java/com/xxx/payment/**
-  entities: [Payment, Refund]
-  responsibility: 支付受理、退款、对账
-user:
-  paths:
-    - src/main/java/com/xxx/user/**
-  entities: [User, UserProfile, LoginLog]
-  responsibility: 账户管理、注册、认证
--->
-```
-
-**字段约定**：
-- `paths`：glob 模式列表，增量更新按此分桶；每个源文件应命中唯一一个域
-- `entities`：**归属本域**的核心实体（不是"本域用到的实体"）
-- `responsibility`：一句话职责（可选，用于 `domains/README.md` 清单）
-
-**设计原则**：每个实体归属唯一一个域；User 虽然被 order、payment 引用，仍只在 user 域列出一次。跨域引用通过文档里的相对链接表达，不在 DOMAIN_MAP 体现。
-
----
-
-### 全局层
-
-#### `docs/project-overview/README.md`（入口）
-
-```markdown
-<!-- DOC_META: last_commit=<HEAD commit 12 位，非 git 填 none>, generated=<当前日期 YYYY-MM-DD> -->
-
-<!-- DOMAIN_MAP
-<Step 1.5 确认的 YAML 映射>
--->
-
 # [项目名称] - 项目概览
 
 > 生成时间: [当前日期]
@@ -224,17 +25,17 @@ user:
 - **构建工具**: [Maven / Gradle / npm / pnpm / cargo 等]
 
 ### 业务背景
-[从 README 引言 / package.json description 读取]
+[从 README 引言 / package.json description 读取；读不到时整节改为下方待补充]
 
 > ⚠️ 待补充（需人工确认）：项目的业务背景、要解决的问题
 
 ### 目标用户 / 使用场景
-[从 README 的"Who is this for" / "Use cases" 或权限角色推断；找不到则整节改写为下方待补充]
+[从 README 的 "Who is this for" / "Use cases" / 权限角色推断]
 
 > ⚠️ 待补充（需人工确认）：项目面向的用户角色和典型使用场景
 
 ### 核心价值
-[从 README 的 Features / Why 节推断；找不到则整节改写为下方待补充]
+[从 README 的 Features / Why 节推断]
 
 > ⚠️ 待补充（需人工确认）：项目的核心价值主张
 
@@ -247,7 +48,6 @@ user:
 - **数据存储**: MySQL 8, Redis 7（来源: 依赖 + `application.yml`）
 - **消息队列**: Kafka（来源: `spring-kafka` 依赖）
 - **DevOps**: Docker, GitHub Actions（来源: `Dockerfile`, `.github/workflows/`）
-- **监控**: Prometheus, Grafana（来源: `micrometer-registry-prometheus` 依赖）
 
 ## 核心功能
 
@@ -266,7 +66,7 @@ user:
 - [用户注册](../domains/user/README.md#注册流程)
 - [登录](../domains/user/README.md#登录流程)
 
-[按业务域分组，每组 3-5 个；全量 ≤ 20 个；命名歧义标 [推断]]
+[按域分组，每组 3-5 个；全量 ≤ 20 个；命名歧义标 [推断]]
 
 ## 业务域
 
@@ -274,7 +74,7 @@ user:
 |----|------|---------|------|
 | order | 订单创建、状态流转 | Order, OrderItem | [../domains/order/](../domains/order/README.md) |
 | payment | 支付受理、退款 | Payment, Refund | [../domains/payment/](../domains/payment/README.md) |
-| user | 账户管理、认证 | User, UserProfile | [../domains/user/](../domains/user/README.md) |
+| user | 账户管理、认证 | User, UserProfile | [../domains/user/README.md](../domains/user/README.md) |
 
 完整清单：[领域索引](../domains/README.md)
 
@@ -288,18 +88,18 @@ user:
 - [开发指南](./development.md) — 本地开发、代码规范
 
 **领域层**：
-- [领域清单](../domains/README.md) — 所有业务域索引，各域的实体 / 流程 / API 在各自目录
+- [领域清单](../domains/README.md) — 所有业务域索引
 
 ## 文档维护
 
-本文档由 AI 自动生成，基于代码库快照。
+本文档由 AI 自动生成，基于代码库快照。代码有重大变更时重新调用 skill 覆盖生成。
 
-**更新文档**: 代码有重大变更时重新调用 skill（默认增量；说"重新生成"触发全量）。
-
-**手动维护**（AI 无法推断的部分）:
+**需人工补充**（AI 无法推断）：
 - 业务背景和决策原因
 - 架构演进历史
 - 性能指标与优化建议
+
+**修改领域划分**：编辑 `architecture.md` 的"领域划分"表，调整目录结构，然后重跑 skill。
 ```
 
 ---
@@ -368,16 +168,14 @@ flowchart TB
 | 支付宝 SDK | `alipay-sdk-java` 依赖 + `AlipayClient` 使用 | |
 | OSS | `aliyun-sdk-oss` 依赖 | |
 | Nginx / API 网关 | `> ⚠️ 待补充（需人工确认）`：未在代码库发现，通常在部署层 | |
-| 管理后台 | `> ⚠️ 待补充（需人工确认）`：未发现独立前端代码 | |
 
 ## 目录结构
+
 \`\`\`
 [使用 Glob 扫描得到的真实目录树，按语言自适应深度]
 \`\`\`
 
 ## 领域划分
-
-<!-- 根据 project-overview/README.md 头部的 DOMAIN_MAP 渲染 -->
 
 | 域 | paths | 核心实体（归属本域）| 职责 |
 |----|-------|---------------------|------|
@@ -385,9 +183,11 @@ flowchart TB
 | payment | `src/main/java/com/xxx/payment/**` | Payment, Refund | 支付受理、退款 |
 | user | `src/main/java/com/xxx/user/**` | User, UserProfile | 账户管理、认证 |
 
+> **共享基础设施**（shared-lib、util 等）：[说明位置，如 `packages/common/**`]——不作为业务域。
+
 ### 跨域 ER 主图
 
-> 只展示**跨域引用**的实体关系，域内细节请看各域的 `domain-model.md`。
+> 只展示**跨域引用**的实体关系，域内细节请看各域的 `domain-model.md`（或单文件模式下的 `README.md`）。
 
 \`\`\`mermaid
 erDiagram
@@ -423,7 +223,6 @@ timeline
     2024-06 : v0.1.0<br/>初版上线
     2024-09 : v0.5.0<br/>接入支付网关
     2024-12 : v1.0.0<br/>正式发布
-    2025-03 : v1.2.0<br/>国际化支持
 \`\`\`
 
 ### 发布历史
@@ -431,11 +230,9 @@ timeline
 | 版本 | 日期 | 主要变更 | 来源 |
 |------|------|---------|------|
 | v0.1.0 | 2024-06-10 | 初版上线 | git tag + CHANGELOG.md |
-| v0.5.0 | 2024-09-20 | 接入支付宝 / 微信支付 | CHANGELOG.md |
-| v1.0.0 | 2024-12-15 | 正式发布，含订单+支付+用户模块 | CHANGELOG.md |
-| v1.2.0 | 2025-03-08 | 国际化（英文/日文），多币种支持 | CHANGELOG.md |
+| v1.0.0 | 2024-12-15 | 正式发布 | CHANGELOG.md |
 
-[无 git tag 也无 CHANGELOG 时整节写以下内容]
+[无 git tag 也无 CHANGELOG 时整节改为：]
 
 > ⚠️ 待补充（需人工确认）：未发现 git tag 或 CHANGELOG.md，请手动补充历史里程碑
 
@@ -444,16 +241,7 @@ timeline
 > ⚠️ 待补充（需人工确认）：未来里程碑需人工规划填写。建议列出：
 > - 下一个版本的目标（功能 / 时间）
 > - 中期（3-6 个月）的主要方向
-> - 长期的愿景或技术债务偿还计划
-
-### 未来里程碑（模板示例）
-
-\`\`\`mermaid
-timeline
-    title 未来规划
-    2025-Q3 : v2.0.0<br/>[待补充] 重构订单服务
-    2025-Q4 : v2.5.0<br/>[待补充] 接入风控系统
-\`\`\`
+> - 长期愿景或技术债务偿还计划
 ```
 
 ---
@@ -549,16 +337,16 @@ timeline
 
 ---
 
-### 领域层
+## 领域层
 
-#### `docs/domains/README.md`（领域清单）
+### `docs/domains/README.md`（领域清单）
 
 ```markdown
 # 业务域清单
 
 [返回项目总览](../project-overview/README.md)
 
-> 每个域自包含：实体、流程、API 都在各自目录。跨域实体引用通过链接指向归属域（如 Order 引用 User 时链接到 user 域）。
+> 每个域自包含：实体、流程、API 都在各自目录。跨域实体引用通过链接指向归属域（如 Order 引用 User 时链接到 user 域的 README.md）。
 
 | 域 | 职责 | 核心实体 | 入口 | 文档 |
 |----|------|---------|------|------|
@@ -566,7 +354,9 @@ timeline
 | payment | 支付受理、退款 | Payment, Refund | `PaymentController` | [./payment/](./payment/README.md) |
 ```
 
-#### `docs/domains/<X>/README.md`（单文件模式）
+---
+
+### `docs/domains/<X>/README.md`（单文件模式）
 
 小域默认模板（实体 < 4 个、流程 < 3 个、总量预估 < 400 行）。
 
@@ -595,12 +385,11 @@ timeline
 - **来源文件**: `order/entity/Order.java`
 - **关键字段**:
   - `id`: 订单 ID
-  - `userId`: 下单用户（引用 [User](../user/domain-model.md#user)，归属 user 域）
+  - `userId`: 下单用户（引用 [User](../user/README.md#user)，归属 user 域）
   - `status`: 订单状态（见下方状态机）
   - `totalAmount`: 订单总额
 - **业务规则**（仅列出代码可验证）:
   - 创建后 30 分钟未支付自动取消（来源: `OrderScheduler.java:23`）
-- **被其他域引用**: audit 域（操作日志记录）
 
 ### OrderItem (订单项)
 [...]
@@ -678,21 +467,15 @@ stateDiagram-v2
 | 方法 | 端点 | 入口 | 简述 |
 |------|------|------|------|
 | GET | `/api/orders` | `OrderController.list` | 订单列表分页 |
-
-## 被跨域流程调用
-
-> 当本域的 Service 被其他域的流程调用时填写。无则省略本节。
-
-| 本域接口 | 调用方域 | 跨域流程 |
-|---------|---------|---------|
-| `OrderService.updateStatus` | payment | [退款到账](../payment/flows.md#退款到账) |
 ```
 
-#### `docs/domains/<X>/` 拆分模式
+---
 
-大域触发拆分（任一条件：实体 ≥ 4、流程 ≥ 3、预估 > 400 行）时，拆成 3 个文件。
+### `docs/domains/<X>/` 拆分模式
 
-**`<X>/README.md`**（拆分模式的概览）
+触发条件：实体 ≥ 4 或流程 ≥ 3 或预估 > 400 行。
+
+**`<X>/README.md`**（拆分模式的概览 + 跳转段，让跨域锚点可达）
 
 ```markdown
 # Order 领域
@@ -716,6 +499,26 @@ stateDiagram-v2
 - Service: `order/service/`
 - Repository: `order/repository/`
 - Entity: `order/entity/`
+
+## 核心实体
+
+> 跨域链接的锚点保留在此处，详细说明见 `domain-model.md`。
+
+### Order
+订单主实体。详见 [domain-model.md#order](./domain-model.md#order)。
+
+### OrderItem
+订单项。详见 [domain-model.md#orderitem](./domain-model.md#orderitem)。
+
+## 主要流程
+
+> 跨域链接的锚点保留在此处，详细说明见 `flows.md`。
+
+### 创建订单流程
+详见 [flows.md#创建订单流程](./flows.md#创建订单流程)。
+
+### 下单支付流程
+详见 [flows.md#下单支付流程](./flows.md#下单支付流程)。
 
 ## 章节
 
@@ -743,7 +546,7 @@ erDiagram
 ## 核心实体
 
 ### Order (订单)
-[同单文件模式的实体格式；跨域字段用 `引用 [EntityName](../<other-domain>/domain-model.md#xxx)`]
+[同单文件模式的实体格式；跨域字段用 `引用 [EntityName](../<other-domain>/README.md#xxx)`]
 
 ## 次要实体
 
@@ -773,13 +576,19 @@ erDiagram
 
 | 方法 | 端点 | 入口 | 简述 |
 |------|------|------|------|
-
-## 被跨域流程调用
-
-> 当本域的 Service 被其他域的流程调用时填写。无则省略本节。
-
-| 本域接口 | 调用方域 | 跨域流程 |
-|---------|---------|---------|
-| `OrderService.updateStatus` | payment | [退款到账](../payment/flows.md#退款到账) |
 ```
+
+---
+
+## 单领域退化结构
+
+Step 2.3 用户确认后使用。直接在 `docs/` 下：
+
 ```
+docs/
+├── README.md              # 项目概览 + 核心功能 + 技术栈 + 链接到下面两个
+├── domain-model.md        # 所有实体
+└── flows.md               # 所有流程 + 状态机
+```
+
+此时项目层的架构/部署/依赖/开发等内容合并进 `docs/README.md` 适当小节，不再拆多个文件。

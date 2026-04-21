@@ -11,7 +11,7 @@
 - `build.gradle` 含 `org.springframework.boot` 插件
 - 主类带 `@SpringBootApplication`
 
-### 领域识别（Step 1.5 用）
+### 领域识别（Step 2 用）
 
 **首选信号**：package 路径 `com.<company>.<project>.<domain>.*`，其中 `<domain>` 段通常就是业务域名。
 
@@ -68,7 +68,7 @@ order:
 - `package.json` 含 `express` / `@nestjs/core` / `koa` / `fastify`
 - 入口：`index.js` / `app.js` / `server.js` / `src/main.ts`（NestJS）
 
-### 领域识别（Step 1.5 用）
+### 领域识别（Step 2 用）
 
 **首选信号**：顶层功能目录。
 - NestJS：`src/<module>/` 每个子目录通常一个 Module，对应一个业务域（`src/order/`、`src/payment/`）
@@ -116,7 +116,7 @@ order:
 - `pyproject.toml` / `requirements.txt` / `setup.py`
 - `manage.py`（Django）、`app.py` / `main.py`（Flask/FastAPI）
 
-### 领域识别（Step 1.5 用）
+### 领域识别（Step 2 用）
 
 **Django**：每个 app（`manage.py startapp` 创建）通常就是一个业务域。扫描 `INSTALLED_APPS` 里的本地 app（过滤 `django.contrib.*` 等第三方）。
 
@@ -167,7 +167,7 @@ order:
 - `go.mod` 存在
 - 入口：`main.go` 或 `cmd/*/main.go`
 
-### 领域识别（Step 1.5 用）
+### 领域识别（Step 2 用）
 
 **首选信号**：
 - `internal/<domain>/` 子包（Go 项目惯例，每个子包一个域）
@@ -214,7 +214,7 @@ order:
 - `Cargo.toml` 存在
 - 入口：`src/main.rs`（binary）或 `src/lib.rs`（library）
 
-### 领域识别（Step 1.5 用）
+### 领域识别（Step 2 用）
 
 **首选信号**：
 - 模块目录 `src/<domain>/mod.rs` 或 `src/<domain>.rs`
@@ -251,7 +251,7 @@ order:
 - `go.work`、Gradle `settings.gradle` 含多 `include`
 - Maven 父 `pom.xml` 含 `<modules>`
 
-### 领域识别（Step 1.5 用）
+### 领域识别（Step 2 用）
 
 Monorepo 天然按 service/package 分域：**每个顶层子项目 ≈ 一个域**。
 
@@ -262,11 +262,8 @@ order-service:
 payment-service:
   paths:
     - services/payment-service/**
-shared-libs:
-  paths:
-    - packages/common/**
-    - packages/types/**
-  # shared-libs 是基础设施性质，不作为业务域；放到 shared 或单独列出不进 domains/
+# shared libs（packages/common/**、packages/types/**）属基础设施，不作为业务域，
+# 不进 domains/；在 architecture.md 的"目录结构"一句话说明即可。
 ```
 
 **例外**：如果单个子项目内部业务复杂（如一个大 monolith service），仍需在该子项目内部继续按 package 做领域划分。
@@ -279,7 +276,7 @@ shared-libs:
 
 ---
 
-## 架构组件识别（Step 1.4.2 / Step 4.5 用）
+## 架构组件识别（Step 1.4 / Step 5.3 用）
 
 从依赖和配置推断**系统架构图里应该出现的组件**。每种组件给出典型依赖名 + 配置 key。
 
