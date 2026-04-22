@@ -23,7 +23,8 @@
 | `auto:project-meta` | 项目类型、版本、构建工具 |
 | `auto:tech-stack` | 技术栈总览 |
 | `auto:features` | 核心功能清单 |
-| `auto:domain-index` | 项目层 README 的业务域表格 |
+| `auto:domain-index` | 项目层 README 的业务域表格（跟随 `auto:domains-table` 的域名重算） |
+| `auto:domains-listing` | 领域层 `domains/README.md` 的领域清单表（跟随 `auto:domains-table` 的域名重算） |
 | `auto:arch-pattern` | 架构模式判断 |
 | `auto:arch-diagram` | 系统架构图 + 组件清单 |
 | `auto:dir-tree` | 目录结构 |
@@ -33,7 +34,7 @@
 | `auto:flow:<Name>` | 单个流程的序列图、关键步骤 |
 | `auto:state:<Entity>` | 单个状态机图 |
 | `auto:endpoints` | 端点表格 |
-| `auto:domains-table` | architecture.md 的领域划分表（**特殊**：首次填入，之后以既有内容为权威，skill 只在发现未归属新路径时追加到"待归属"行） |
+| `auto:domains-table` | architecture.md 的领域划分表（**混合区**：首次填入；之后**行级既有权威**——既有行的任何单元格、备注都视为人工权威，skill 永不覆写；只在发现未归属的新路径时**追加**"待归属"行） |
 
 **人工专属小节**（永不在 auto 标记内，skill 不动）：
 - 业务背景 / 目标用户 / 核心价值
@@ -427,10 +428,12 @@ timeline
 
 > 每个域自包含：实体、流程、API 都在各自目录。跨域实体引用通过链接指向归属域（如 Order 引用 User 时链接到 user 域的 README.md）。
 
+<!-- auto:domains-listing -->
 | 域 | 职责 | 核心实体 | 入口 | 文档 |
 |----|------|---------|------|------|
 | order | 订单创建、状态流转 | Order, OrderItem | `OrderController` | [./order/](./order/README.md) |
 | payment | 支付受理、退款 | Payment, Refund | `PaymentController` | [./payment/](./payment/README.md) |
+<!-- /auto:domains-listing -->
 ```
 
 ---
