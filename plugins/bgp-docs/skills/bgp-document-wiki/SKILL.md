@@ -1,6 +1,6 @@
 ---
-name: document-project
-description: Analyze existing codebase and generate comprehensive project documentation including overview, domain models, business flows, architecture, and dependencies. Use when the user asks to document a project, create project documentation, analyze codebase structure, or mentions terms like "项目文档", "整理文档", "项目说明", "代码分析", "架构梳理", "onboarding 文档".
+name: bgp-document-wiki
+description: Analyze existing codebase and generate a two-layer project wiki under docs/wiki/ (project overview + domain docs), covering domain models, business flows, architecture, and dependencies. Use when the user asks to document a project, create a project wiki, analyze codebase structure, or mentions terms like "项目 wiki", "项目文档", "整理文档", "项目说明", "代码分析", "架构梳理", "onboarding 文档".
 ---
 
 # Project Documentation Generator

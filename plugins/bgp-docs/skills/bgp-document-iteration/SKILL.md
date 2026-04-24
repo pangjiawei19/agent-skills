@@ -196,7 +196,7 @@ git diff <range> --name-status
 
 ---
 
-**后续建议**:本次改动涉及的 domain 现状文档如需同步,运行 `document-project` skill。
+**后续建议**:本次改动涉及的 domain 现状文档如需同步,运行 `bgp-document-wiki` skill。
 ```
 
 ## Step 7: 询问是否 commit
