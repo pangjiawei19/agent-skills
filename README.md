@@ -25,12 +25,12 @@ BGP 团队内部的 Claude Code agent skill 分发仓库,通过 Claude Code plug
 
 | Skill | 用途 | 典型触发 |
 |---|---|---|
-| `document-project` | 从代码库生成两层项目文档(项目层 + 领域层) | 新接手项目、onboarding 材料、代码重构后同步 |
+| `bgp-document-wiki` | 从代码库生成两层项目文档(项目层 + 领域层),输出至 `docs/wiki/` | 新接手项目、onboarding 材料、代码重构后同步 |
 | `bgp-document-iteration` | 基于 git diff 生成本次迭代改动文档 | feature 分支合并 develop 前 |
 
-**配套关系**:`document-project` 维护项目**现状**(随代码演进),`bgp-document-iteration` 记录每次**变更历史**(不可变时间线)。两者输出互不覆盖,通过链接串联。
+**配套关系**:`bgp-document-wiki` 维护项目**现状**(随代码演进),`bgp-document-iteration` 记录每次**变更历史**(不可变时间线)。两者输出互不覆盖,通过链接串联。
 
-调用格式:`/bgp-docs:document-project`、`/bgp-docs:bgp-document-iteration`。也可以让 Claude 自动根据任务描述触发。
+调用格式:`/bgp-docs:bgp-document-wiki`、`/bgp-docs:bgp-document-iteration`。也可以让 Claude 自动根据任务描述触发。
 
 ## 目录结构
 
@@ -42,7 +42,7 @@ agent-skills/
 │   └── bgp-docs/                 # 分发给团队的 plugin
 │       ├── .claude-plugin/plugin.json
 │       └── skills/
-│           ├── document-project/
+│           ├── bgp-document-wiki/
 │           └── bgp-document-iteration/
 └── skills/                       # 维护者本地使用的游离 skill(不参与分发)
     └── ...
@@ -76,4 +76,4 @@ git add . && git commit -m "feat(bgp-docs): add <skill-name>"
 /plugin install bgp-docs@bgp-skills
 ```
 
-调用 `/bgp-docs:document-project` 能响应即为正常。
+调用 `/bgp-docs:bgp-document-wiki` 能响应即为正常。
