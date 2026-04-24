@@ -34,7 +34,7 @@
 | `auto:flow:<Name>` | 单个流程的序列图、关键步骤 |
 | `auto:state:<Entity>` | 单个状态机图 |
 | `auto:endpoints` | 端点表格 |
-| `auto:domains-table` | architecture.md 的领域划分表（**混合区**：首次填入；之后**行级既有权威**——既有行的任何单元格、备注都视为人工权威，skill 永不覆写；只在发现未归属的新路径时**追加**"待归属"行） |
+| `auto:domains-table` | 01-architecture.md 的领域划分表（**混合区**：首次填入；之后**行级既有权威**——既有行的任何单元格、备注都视为人工权威，skill 永不覆写；只在发现未归属的新路径时**追加**"待归属"行） |
 
 **人工专属小节**（永不在 auto 标记内，skill 不动）：
 - 业务背景 / 目标用户 / 核心价值
@@ -88,7 +88,7 @@
 
 ## 技术栈总览
 
-> 高层分类清单，版本详情见 [外部依赖](./dependencies.md)。找不到的类别省略不写。
+> 高层分类清单，版本详情见 [外部依赖](./03-dependencies.md)。找不到的类别省略不写。
 
 <!-- auto:tech-stack -->
 - **后端**: Spring Boot 3.x（来源: `pom.xml`）
@@ -134,11 +134,11 @@
 ## 文档目录
 
 **项目层**（本目录）：
-- [项目结构](./architecture.md) — 架构模式、系统架构图、目录组织、领域划分、跨域 ER
-- [里程碑](./milestones.md) — 发布历史与未来规划
-- [外部依赖](./dependencies.md) — 框架、库、第三方服务
-- [部署说明](./deployment.md) — 环境要求、启动步骤
-- [开发指南](./development.md) — 本地开发、代码规范
+- [项目结构](./01-architecture.md) — 架构模式、系统架构图、目录组织、领域划分、跨域 ER
+- [里程碑](./02-milestones.md) — 发布历史与未来规划
+- [外部依赖](./03-dependencies.md) — 框架、库、第三方服务
+- [部署说明](./04-deployment.md) — 环境要求、启动步骤
+- [开发指南](./05-development.md) — 本地开发、代码规范
 
 **领域层**：
 - [领域清单](./domains/README.md) — 所有业务域索引
@@ -156,12 +156,12 @@
 - 架构演进历史
 - 性能指标与优化建议
 
-**修改领域划分**：编辑 `architecture.md` 的"领域划分"表即可——重跑时 skill 以既有表为准，只在发现未归属的新代码路径时追加到"待归属"行。
+**修改领域划分**：编辑 `01-architecture.md` 的"领域划分"表即可——重跑时 skill 以既有表为准，只在发现未归属的新代码路径时追加到"待归属"行。
 ```
 
 ---
 
-### `docs/wiki/architecture.md`
+### `docs/wiki/01-architecture.md`
 
 ```markdown
 # 项目结构
@@ -276,7 +276,7 @@ erDiagram
 
 ---
 
-### `docs/wiki/milestones.md`
+### `docs/wiki/02-milestones.md`
 
 ```markdown
 # 项目里程碑
@@ -316,7 +316,7 @@ timeline
 
 ---
 
-### `docs/wiki/dependencies.md`
+### `docs/wiki/03-dependencies.md`
 
 ```markdown
 # 外部依赖
@@ -365,7 +365,7 @@ timeline
 
 ---
 
-### `docs/wiki/deployment.md`
+### `docs/wiki/04-deployment.md`
 
 ```markdown
 # 部署说明
@@ -393,7 +393,7 @@ timeline
 
 ---
 
-### `docs/wiki/development.md`
+### `docs/wiki/05-development.md`
 
 ```markdown
 # 开发指南

@@ -105,7 +105,7 @@ git diff <range> --name-status
 
 **优先级**:
 
-1. **读既有架构文档**:`docs/wiki/architecture.md` 是否存在
+1. **读既有架构文档**:`docs/wiki/01-architecture.md` 是否存在
    - 存在 → 提取 `<!-- auto:domains-table -->` 块中每行的"paths"列
    - 对每个改动文件路径,匹配第一个命中的 path prefix,归属该域
 2. **启发式推断**(无架构文档时):

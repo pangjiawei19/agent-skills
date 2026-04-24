@@ -263,7 +263,7 @@ payment-service:
   paths:
     - services/payment-service/**
 # shared libs（packages/common/**、packages/types/**）属基础设施，不作为业务域，
-# 不进 domains/；在 architecture.md 的"目录结构"一句话说明即可。
+# 不进 domains/；在 01-architecture.md 的"目录结构"一句话说明即可。
 ```
 
 **例外**：如果单个子项目内部业务复杂（如一个大 monolith service），仍需在该子项目内部继续按 package 做领域划分。
