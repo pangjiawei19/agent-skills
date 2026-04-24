@@ -1,0 +1,11 @@
+{
+  "name": "bgp-docs",
+  "description": "项目文档套件:从代码生成项目现状文档,并记录每次迭代开发的改动内容",
+  "author": {
+    "name": "pangjiawei"
+  },
+  "homepage": "https://github.com/pangjiawei19/agent-skills",
+  "repository": "https://github.com/pangjiawei19/agent-skills",
+  "license": "MIT",
+  "keywords": ["documentation", "iteration", "project-docs", "bgp"]
+}

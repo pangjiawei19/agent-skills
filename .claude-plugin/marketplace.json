@@ -1,0 +1,19 @@
+{
+  "name": "bgp-skills",
+  "owner": {
+    "name": "pangjiawei"
+  },
+  "metadata": {
+    "description": "BGP 团队内部 agent skill 分发仓库"
+  },
+  "plugins": [
+    {
+      "name": "bgp-docs",
+      "source": "./plugins/bgp-docs",
+      "description": "项目文档套件:生成项目现状文档 + 记录每次迭代改动",
+      "author": {
+        "name": "pangjiawei"
+      }
+    }
+  ]
+}

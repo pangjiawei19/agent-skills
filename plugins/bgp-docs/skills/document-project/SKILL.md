@@ -7,6 +7,8 @@ description: Analyze existing codebase and generate comprehensive project docume
 
 从现有代码库生成两层项目文档：**项目层**（非业务的项目级内容）+ **领域层**（业务内容按域拆分）。
 
+**配套使用**：`bgp-document-iteration` skill 用于记录每次 feature 分支的迭代改动,与本 skill 形成套件——本 skill 维护**项目现状**(随代码演进),`bgp-document-iteration` 记录**变更历史**(不可变时间线)。
+
 ## 工具兼容性
 
 本 skill 使用 **Claude Code** 工具名（`Glob`、`Grep`、`Read`、`Bash`、`Agent`）。跨平台映射见 [references/tool-mapping.md](references/tool-mapping.md)。
