@@ -46,7 +46,7 @@
 
 ## 项目层
 
-### `docs/project-overview/README.md`（入口）
+### `docs/wiki/README.md`（入口）
 
 ```markdown
 # [项目名称] - 项目概览
@@ -104,17 +104,17 @@
 
 <!-- auto:features -->
 ### 订单相关
-- [下单](../domains/order/README.md#创建订单流程) — POST /api/orders
-- [查询订单](../domains/order/README.md) — GET /api/orders/{id}
-- [取消订单](../domains/order/README.md) — POST /api/orders/{id}/cancel
+- [下单](./domains/order/README.md#创建订单流程) — POST /api/orders
+- [查询订单](./domains/order/README.md) — GET /api/orders/{id}
+- [取消订单](./domains/order/README.md) — POST /api/orders/{id}/cancel
 
 ### 支付相关
-- [在线支付](../domains/payment/README.md#charge) — POST /api/payments
-- [申请退款](../domains/payment/README.md#refund) — POST /api/refunds
+- [在线支付](./domains/payment/README.md#charge) — POST /api/payments
+- [申请退款](./domains/payment/README.md#refund) — POST /api/refunds
 
 ### 账户相关
-- [用户注册](../domains/user/README.md#注册流程)
-- [登录](../domains/user/README.md#登录流程)
+- [用户注册](./domains/user/README.md#注册流程)
+- [登录](./domains/user/README.md#登录流程)
 <!-- /auto:features -->
 
 [按域分组，每组 3-5 个；全量 ≤ 20 个；命名歧义标 [推断]]
@@ -124,12 +124,12 @@
 <!-- auto:domain-index -->
 | 域 | 职责 | 核心实体 | 文档 |
 |----|------|---------|------|
-| order | 订单创建、状态流转 | Order, OrderItem | [../domains/order/](../domains/order/README.md) |
-| payment | 支付受理、退款 | Payment, Refund | [../domains/payment/](../domains/payment/README.md) |
-| user | 账户管理、认证 | User, UserProfile | [../domains/user/README.md](../domains/user/README.md) |
+| order | 订单创建、状态流转 | Order, OrderItem | [./domains/order/](./domains/order/README.md) |
+| payment | 支付受理、退款 | Payment, Refund | [./domains/payment/](./domains/payment/README.md) |
+| user | 账户管理、认证 | User, UserProfile | [./domains/user/README.md](./domains/user/README.md) |
 <!-- /auto:domain-index -->
 
-完整清单：[领域索引](../domains/README.md)
+完整清单：[领域索引](./domains/README.md)
 
 ## 文档目录
 
@@ -141,7 +141,7 @@
 - [开发指南](./development.md) — 本地开发、代码规范
 
 **领域层**：
-- [领域清单](../domains/README.md) — 所有业务域索引
+- [领域清单](./domains/README.md) — 所有业务域索引
 
 ## 文档维护
 
@@ -161,7 +161,7 @@
 
 ---
 
-### `docs/project-overview/architecture.md`
+### `docs/wiki/architecture.md`
 
 ```markdown
 # 项目结构
@@ -276,7 +276,7 @@ erDiagram
 
 ---
 
-### `docs/project-overview/milestones.md`
+### `docs/wiki/milestones.md`
 
 ```markdown
 # 项目里程碑
@@ -316,7 +316,7 @@ timeline
 
 ---
 
-### `docs/project-overview/dependencies.md`
+### `docs/wiki/dependencies.md`
 
 ```markdown
 # 外部依赖
@@ -365,7 +365,7 @@ timeline
 
 ---
 
-### `docs/project-overview/deployment.md`
+### `docs/wiki/deployment.md`
 
 ```markdown
 # 部署说明
@@ -393,7 +393,7 @@ timeline
 
 ---
 
-### `docs/project-overview/development.md`
+### `docs/wiki/development.md`
 
 ```markdown
 # 开发指南
@@ -419,12 +419,12 @@ timeline
 
 ## 领域层
 
-### `docs/domains/README.md`（领域清单）
+### `docs/wiki/domains/README.md`（领域清单）
 
 ```markdown
 # 业务域清单
 
-[返回项目总览](../project-overview/README.md)
+[返回项目总览](../README.md)
 
 > 每个域自包含：实体、流程、API 都在各自目录。跨域实体引用通过链接指向归属域（如 Order 引用 User 时链接到 user 域的 README.md）。
 
@@ -438,14 +438,14 @@ timeline
 
 ---
 
-### `docs/domains/<X>/README.md`（单文件模式）
+### `docs/wiki/domains/<X>/README.md`（单文件模式）
 
 小域默认模板（实体 < 4 个、流程 < 3 个、总量预估 < 400 行）。
 
 ```markdown
 # Order 领域
 
-[返回项目总览](../../project-overview/README.md) · [返回领域清单](../README.md)
+[返回项目总览](../../README.md) · [返回领域清单](../README.md)
 
 ## 领域职责
 订单的创建、状态流转、查询与取消。
@@ -587,7 +587,7 @@ stateDiagram-v2
 
 ---
 
-### `docs/domains/<X>/` 拆分模式
+### `docs/wiki/domains/<X>/` 拆分模式
 
 触发条件：实体 ≥ 4 或流程 ≥ 3 或预估 > 400 行。
 
@@ -596,7 +596,7 @@ stateDiagram-v2
 ```markdown
 # Order 领域
 
-[返回项目总览](../../project-overview/README.md) · [返回领域清单](../README.md)
+[返回项目总览](../../README.md) · [返回领域清单](../README.md)
 
 ## 领域职责
 订单的创建、状态流转、查询与取消。
@@ -652,7 +652,7 @@ stateDiagram-v2
 ```markdown
 # Order 领域模型
 
-[返回 Order 领域](./README.md) · [领域清单](../README.md) · [项目总览](../../project-overview/README.md)
+[返回 Order 领域](./README.md) · [领域清单](../README.md) · [项目总览](../../README.md)
 
 ## 实体关系图（本域）
 
@@ -692,7 +692,7 @@ erDiagram
 ```markdown
 # Order 业务流程
 
-[返回 Order 领域](./README.md) · [领域清单](../README.md) · [项目总览](../../project-overview/README.md)
+[返回 Order 领域](./README.md) · [领域清单](../README.md) · [项目总览](../../README.md)
 
 ## 主要流程
 
@@ -726,13 +726,13 @@ erDiagram
 
 ## 单领域退化结构
 
-Step 2.3 用户确认后使用。直接在 `docs/` 下：
+Step 2.3 用户确认后使用。直接在 `docs/wiki/` 下：
 
 ```
-docs/
+docs/wiki/
 ├── README.md              # 项目概览 + 核心功能 + 技术栈 + 链接到下面两个
 ├── domain-model.md        # 所有实体
 └── flows.md               # 所有流程 + 状态机
 ```
 
-此时项目层的架构/部署/依赖/开发等内容合并进 `docs/README.md` 适当小节，不再拆多个文件。
+此时项目层的架构/部署/依赖/开发等内容合并进 `docs/wiki/README.md` 适当小节，不再拆多个文件。

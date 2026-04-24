@@ -23,7 +23,7 @@ description: 当用户完成一轮 feature 分支开发、准备合并回 develo
 ## 输出路径
 
 ```
-docs/projects/iterations/YYYY-MM-DD-<branch-slug>.md
+docs/wiki/iterations/YYYY-MM-DD-<branch-slug>.md
 ```
 
 - `YYYY-MM-DD`: 执行当天日期
@@ -105,7 +105,7 @@ git diff <range> --name-status
 
 **优先级**:
 
-1. **读既有架构文档**:`docs/project-overview/architecture.md` 是否存在
+1. **读既有架构文档**:`docs/wiki/architecture.md` 是否存在
    - 存在 → 提取 `<!-- auto:domains-table -->` 块中每行的"paths"列
    - 对每个改动文件路径,匹配第一个命中的 path prefix,归属该域
 2. **启发式推断**(无架构文档时):
@@ -115,7 +115,7 @@ git diff <range> --name-status
 
 ## Step 6: 生成文档
 
-按下方模板写入 `docs/projects/iterations/<filename>.md`。
+按下方模板写入 `docs/wiki/iterations/<filename>.md`。
 
 **每个 domain 下的写作规则**:
 
@@ -203,12 +203,12 @@ git diff <range> --name-status
 
 生成文件后,告知用户路径并询问:
 
-> 已生成 `docs/projects/iterations/<filename>.md`(N 行)。
+> 已生成 `docs/wiki/iterations/<filename>.md`(N 行)。
 > 是否 commit 到当前分支 `<branch-name>`?回复 `y` / `n`。
 
 - `y` → 执行:
   ```bash
-  git add docs/projects/iterations/<filename>.md
+  git add docs/wiki/iterations/<filename>.md
   git commit -m "docs: 添加 <branch-slug> 迭代文档"
   ```
 - `n` → 不做任何 git 操作,结束
@@ -224,7 +224,7 @@ git diff <range> --name-status
 
 生成后执行:
 
-1. **文件真的写入了**:`ls docs/projects/iterations/<filename>.md` 存在且非空
+1. **文件真的写入了**:`ls docs/wiki/iterations/<filename>.md` 存在且非空
 2. **抽查路径真实性**:从"关键改动"小节随机抽 3 条,`ls` 验证路径存在(对 `[D]` 删除的跳过)
    - 抽查到虚构路径 → 修正为实际改动文件
 3. **统计数字对得上**:文档顶部声明的 commit 数、文件数与 `git log --oneline <range> | wc -l` 和 `git diff <range> --name-only | wc -l` 一致
