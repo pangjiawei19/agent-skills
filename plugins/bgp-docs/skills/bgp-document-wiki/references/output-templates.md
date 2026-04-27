@@ -34,12 +34,12 @@
 | `auto:flow:<Name>` | 单个流程的序列图、关键步骤 |
 | `auto:state:<Entity>` | 单个状态机图 |
 | `auto:endpoints` | 端点表格 |
-| `auto:domains-table` | 01-architecture.md 的领域划分表（**混合区**：首次填入；之后**行级既有权威**——既有行的任何单元格、备注都视为人工权威，skill 永不覆写；只在发现未归属的新路径时**追加**"待归属"行） |
+| `auto:domains-table` | 01-architecture.md 的领域划分表（**混合区**：首次填入；之后**行级既有权威**——既有行的任何单元格、备注都视为人工权威，skill 永不覆写；只在发现未归属的新路径时**追加**“待归属”行） |
 
 **人工专属小节**（永不在 auto 标记内，skill 不动）：
 - 业务背景 / 目标用户 / 核心价值
-- 每个实体下的"业务背景 / 例外"小节
-- 每个流程下的"设计说明 / 例外"小节
+- 每个实体下的“业务背景 / 例外”小节
+- 每个流程下的“设计说明 / 例外”小节
 - 未来里程碑规划
 
 ---
@@ -64,27 +64,13 @@
 
 ### 业务背景
 
-> 👤 人工小节（skill 不改写）。首次生成若读不到，保留下方"待补充"提示。
+*以下产品视角段落由 AI 首次生成，后续由维护者更新；skill 重跑不会覆写本节。*
 
-[从 README 引言 / package.json description 读取；读不到时保留下方占位]
+[由 AI 首次推断填入：项目业务定位、解决什么问题、目标用户、核心价值。2 ~ 4 句白话，遵守 SKILL.md 4.2 节人味要求。
 
-> ⚠️ 待补充（需人工确认）：项目的业务背景、要解决的问题
+数据源优先级见 SKILL.md Step 1.4：README 引言 / Agent instructions / 端点反推 / package.json description。
 
-### 目标用户 / 使用场景
-
-> 👤 人工小节（skill 不改写）。
-
-[从 README 的 "Who is this for" / "Use cases" / 权限角色推断]
-
-> ⚠️ 待补充（需人工确认）：项目面向的用户角色和典型使用场景
-
-### 核心价值
-
-> 👤 人工小节（skill 不改写）。
-
-[从 README 的 Features / Why 节推断]
-
-> ⚠️ 待补充（需人工确认）：项目的核心价值主张
+数据源都不足时，降级为基于代码可观察事实的中性描述（如“本项目是一个多 Agent 服务，提供 X / Y / Z 三类能力，通过 REST 与 IM 对外暴露”）。**不放占位符。**]
 
 ## 技术栈总览
 
@@ -429,11 +415,13 @@ timeline
 > 每个域自包含：实体、流程、API 都在各自目录。跨域实体引用通过链接指向归属域（如 Order 引用 User 时链接到 user 域的 README.md）。
 
 <!-- auto:domains-listing -->
-| 域 | 职责 | 核心实体 | 入口 | 文档 |
-|----|------|---------|------|------|
-| order | 订单创建、状态流转 | Order, OrderItem | `OrderController` | [./order/](./order/README.md) |
-| payment | 支付受理、退款 | Payment, Refund | `PaymentController` | [./payment/](./payment/README.md) |
+| 域 | 提供什么能力 | 文档 |
+|----|------------|------|
+| order | 创建订单、状态流转、查询、取消（含取消超时自动撤单） | [./order/](./order/README.md) |
+| payment | 在线支付受理、退款、对账 | [./payment/](./payment/README.md) |
 <!-- /auto:domains-listing -->
+
+> “提供什么能力”列由 AI 首次推断（基于 Step 2.4 子系统聚合）；增量模式下既有行不改，新增域追加新行。详见 SKILL.md “混合区块” 小节。
 ```
 
 ---
@@ -443,14 +431,37 @@ timeline
 小域默认模板（实体 < 4 个、流程 < 3 个、总量预估 < 400 行）。
 
 ```markdown
-# Order 领域
+# order · 订单管理
+
+*以下产品视角段落由 AI 首次生成，后续由维护者更新；skill 重跑不会覆写本节。*
+
+[由 AI 首次推断填入：2 ~ 4 句域叙事——业务痛点 + 域定位，遵守 SKILL.md 4.2 节人味要求。
+数据源：Agent instructions / Service 类注释 / Controller 端点反推 / 业务上下文。]
+
+## 这个域提供什么能力
+
+### [子系统 1 中文名]
+
+[1 ~ 2 句白话：能做什么 + 给谁用，遵守人味要求]
+
+入口：`<REST 路径 / Cron 配置 / IM 路由关键词 / Workflow 名>`
+
+### [子系统 2 中文名]
+
+[同上格式。子系统识别策略见 SKILL.md Step 2.4 + language-hints.md 各语言“子系统识别”小节。每域 ≤ 6 个。]
+
+---
+
+## 实现细节
+
+> 以下面向开发与维护人员。
 
 [返回项目总览](../../README.md) · [返回领域清单](../README.md)
 
-## 领域职责
+### 领域职责
 订单的创建、状态流转、查询与取消。
 
-## 对外接口
+### 对外接口
 
 <!-- auto:endpoints -->
 **REST API**（来源: `OrderController.java`）:
@@ -463,9 +474,9 @@ timeline
 - 订阅：`PaymentCompleted`（来自 payment 域）
 <!-- /auto:endpoints -->
 
-## 核心实体
+### 核心实体
 
-### Order (订单)
+#### Order (订单)
 
 <!-- auto:entity:Order -->
 - **来源文件**: `order/entity/Order.java`
@@ -486,15 +497,15 @@ timeline
 
 > ⚠️ 待补充（需人工确认）：填写此实体的业务背景、为什么这样设计、代码里推不出的例外规则。
 
-### OrderItem (订单项)
+#### OrderItem (订单项)
 
 <!-- auto:entity:OrderItem -->
 [同上格式；字段、关联、代码可验证规则]
 <!-- /auto:entity:OrderItem -->
 
-## 主要流程
+### 主要流程
 
-### 创建订单流程（单域）
+#### 创建订单流程（单域）
 
 <!-- auto:flow:创建订单流程 -->
 **入口**: `OrderController.create()` (POST /api/orders)
@@ -522,7 +533,7 @@ sequenceDiagram
 
 > ⚠️ 待补充：性能目标、已知边界情况、运营上的例外处理。
 
-### 下单支付流程（跨域，归属本域）
+#### 下单支付流程（跨域，归属本域）
 
 <!-- auto:flow:下单支付流程 -->
 **入口**: `OrderController.createAndPay()` (POST /api/orders/pay)
@@ -552,9 +563,9 @@ sequenceDiagram
 
 [对本域每个主要流程重复，上限 5 个]
 
-## 状态机（如有）
+### 状态机（如有）
 
-### Order 状态机
+#### Order 状态机
 
 <!-- auto:state:Order -->
 **来源**: `order/entity/OrderStatus.java` + `OrderService.transitionTo`
@@ -567,7 +578,7 @@ stateDiagram-v2
 \`\`\`
 <!-- /auto:state:Order -->
 
-## 实现位置
+### 实现位置
 
 <!-- auto:impl-locations -->
 - Controller: `order/controller/`
@@ -576,7 +587,7 @@ stateDiagram-v2
 - Entity: `order/entity/`
 <!-- /auto:impl-locations -->
 
-## 其他端点
+### 其他端点
 
 <!-- auto:endpoints:secondary -->
 | 方法 | 端点 | 入口 | 简述 |
@@ -594,14 +605,34 @@ stateDiagram-v2
 **`<X>/README.md`**（拆分模式的概览 + 跳转段，让跨域锚点可达）
 
 ```markdown
-# Order 领域
+# order · 订单管理
+
+*以下产品视角段落由 AI 首次生成，后续由维护者更新；skill 重跑不会覆写本节。*
+
+[由 AI 首次推断填入：2 ~ 4 句域叙事，遵守 4.2 节人味要求]
+
+## 这个域提供什么能力
+
+### [子系统 1 中文名]
+
+[1 ~ 2 句白话 + 入口]
+
+### [子系统 2 中文名]
+
+...
+
+---
+
+## 实现细节
+
+> 以下面向开发与维护人员。
 
 [返回项目总览](../../README.md) · [返回领域清单](../README.md)
 
-## 领域职责
+### 领域职责
 订单的创建、状态流转、查询与取消。
 
-## 对外接口
+### 对外接口
 
 <!-- auto:endpoints -->
 **REST API**（来源: `OrderController.java`）:
@@ -612,7 +643,7 @@ stateDiagram-v2
 - 发布：`OrderCreated`、`OrderCancelled`
 <!-- /auto:endpoints -->
 
-## 实现位置
+### 实现位置
 
 <!-- auto:impl-locations -->
 - Controller: `order/controller/`
@@ -621,27 +652,27 @@ stateDiagram-v2
 - Entity: `order/entity/`
 <!-- /auto:impl-locations -->
 
-## 核心实体
+### 核心实体
 
 > 跨域链接的锚点保留在此处，详细说明见 `domain-model.md`。
 
-### Order
+#### Order
 订单主实体。详见 [domain-model.md#order](./domain-model.md#order)。
 
-### OrderItem
+#### OrderItem
 订单项。详见 [domain-model.md#orderitem](./domain-model.md#orderitem)。
 
-## 主要流程
+### 主要流程
 
 > 跨域链接的锚点保留在此处，详细说明见 `flows.md`。
 
-### 创建订单流程
+#### 创建订单流程
 详见 [flows.md#创建订单流程](./flows.md#创建订单流程)。
 
-### 下单支付流程
+#### 下单支付流程
 详见 [flows.md#下单支付流程](./flows.md#下单支付流程)。
 
-## 章节
+### 章节
 
 - [领域模型](./domain-model.md) — 本域实体、关系、业务规则
 - [业务流程](./flows.md) — 本域流程、状态机、端点清单
@@ -736,3 +767,41 @@ docs/wiki/
 ```
 
 此时项目层的架构/部署/依赖/开发等内容合并进 `docs/wiki/README.md` 适当小节，不再拆多个文件。
+
+---
+
+## 写作规范 Checklist（生成时对照）
+
+在 Step 7 写入每个文件前 / 写入后做以下勾选。完整规范见 SKILL.md “全局原则 → 4. 写作规范” 节。
+
+### 语言与标点
+
+- [ ] 中文文本中所有标点为全角：`，。；：？！“”‘’（）【】《》——……`
+- [ ] 半角标点仅出现在：代码块、内联 code、文件路径、命令、URL、邮箱、版本号
+- [ ] 中英文之间不加额外空格
+
+### 人味（产品视角段必查）
+
+- [ ] 单段叙述 ≤ 3 句
+- [ ] 没有出现 LanceDB / Aho-Corasick / 1536 维向量 / Supervisor 路由 这类技术名词
+- [ ] 用结果导向、口语化表达，不写调用链
+- [ ] 用具体场景而非泛泛能力描述
+
+### Mermaid 语法
+
+- [ ] 边标签 `-->|文本|` 中含 `{ } [ ] ( ) \| /` → 用双引号包裹整个文本
+- [ ] 节点显示文本含特殊字符或长中文 → 用双引号
+- [ ] subgraph 标题含空格 / 中文 → 用双引号
+- [ ] 节点内换行 → 用 `<br/>` 或双引号内 `\n`
+
+### 来源标注
+
+- [ ] 重要事实标注来源（如 `Java 17（来源：pom.xml <java.version>）`）
+- [ ] 行号引用频率适度
+- [ ] 产品视角段不标行号
+
+### 产品视角段（domain README + 项目层 README 业务背景）
+
+- [ ] 顶部有 AI 首次生成提示行：`*以下产品视角段落由 AI 首次生成，后续由维护者更新；skill 重跑不会覆写本节。*`
+- [ ] 整段不在 `<!-- auto:xxx -->` 标记内
+- [ ] domain README 的 H1 含中文别名：`# <域 ID> · <中文别名>`

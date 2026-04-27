@@ -1,6 +1,6 @@
 # 按语言 / 框架的定位提示
 
-当识别出项目类型后，加载本文件查阅对应的"在哪里找实体 / 入口 / 依赖 / 配置"提示。
+当识别出项目类型后，加载本文件查阅对应的“在哪里找实体 / 入口 / 依赖 / 配置”提示。
 
 ---
 
@@ -38,6 +38,17 @@ order:
     - src/test/java/com/xxx/shop/order/**
 ```
 
+### 子系统识别（Step 2.4 用）
+
+每个域内的“子系统”= 对外能独立提供能力的运行单元。Java / Spring 项目识别策略：
+
+- **核心 `@Service` 类**：按职责聚合（不要拆得太细，多个互相调用的 Service 算一个子系统）
+- **定时任务**：`@Scheduled` 标注的方法 / `Quartz` 注册的 Job
+- **MQ 消费者**：`@KafkaListener` / `@RabbitListener` / `@StreamListener` 标注的方法
+- **REST 控制器**：按路由前缀聚合一组相关端点为一个子系统（如 `/api/orders/*` 下的所有端点 = “订单管理”子系统）
+
+每个子系统记录：中文名（按职责命名）、能做什么 + 给谁用（1 ~ 2 句白话）、入口（REST 路径 / Cron 表达式名 / Topic 名）。
+
 ### 实体定位
 - 目录：`**/entity/**`、`**/model/**`、`**/domain/**`
 - 注解：`@Entity`、`@Table`、`@Document`（MongoDB）
@@ -47,8 +58,8 @@ order:
 - REST: `@RestController`、`@RequestMapping`、`@GetMapping` 等
 - GraphQL: `@QueryMapping`、`@SchemaMapping`
 - MQ: `@RabbitListener`、`@KafkaListener`、`@StreamListener`
-- 定时: `@Scheduled`
-- 事件: `@EventListener`
+- 定时：`@Scheduled`
+- 事件：`@EventListener`
 
 ### 依赖来源
 - `pom.xml` `<dependencies>` / `build.gradle` `dependencies {}`
@@ -86,6 +97,17 @@ order:
     - src/order/**
     - src/orders/**  # 单复数都要考虑
 ```
+
+### 子系统识别（Step 2.4 用）
+
+Node.js 项目识别策略：
+
+- **NestJS**：每个 `@Injectable() *.service.ts` 核心服务、`@Cron` 标注的定时任务、`@MessagePattern` / `@EventPattern` 消费者各算一个子系统
+- **Express / Koa**：按 router 文件聚合一组相关端点为一个子系统；定时任务（`node-cron`、`agenda` 等注册的 job）
+- **Agent 框架（VoltAgent / LangGraph 等）**：每个 Agent 实例 / Workflow 定义 / Job 注册各算一个子系统。从入口文件 `import` 反推实例化位置
+- **后台 worker**：`bull` / `bullmq` / `bee-queue` 注册的 Worker
+
+每个子系统记录：中文名、能做什么 + 给谁用、入口（REST 路径 / Cron 配置项名 / 队列名）。
 
 ### 实体 / 模型定位
 - **Mongoose**: `**/models/**`、`mongoose.Schema` / `@Schema()`（NestJS + Mongoose）
@@ -138,6 +160,17 @@ order:
     - order/**  # Django app 在项目根
 ```
 
+### 子系统识别（Step 2.4 用）
+
+Python 项目识别策略：
+
+- **Django**：每个 app 内部按 `views.py` / `services.py` 聚合；`management/commands/` 下的命令；Celery `@shared_task` / `@app.task`
+- **FastAPI**：按 `APIRouter` 实例聚合一组相关端点；后台任务（`BackgroundTasks` 不算子系统，`celery` 才算）
+- **Flask**：按 `Blueprint` 聚合
+- **数据/AI 项目**：每个 pipeline 模块 / 训练脚本 / 推理服务算一个子系统
+
+每个子系统记录：中文名、能做什么 + 给谁用、入口（REST 路径 / Celery task 名 / CLI 命令）。
+
 ### 实体 / 模型定位
 - **Django**: `**/models.py`、`models.Model`
 - **SQLAlchemy**: `**/models/**`、`Base = declarative_base()`
@@ -185,6 +218,18 @@ order:
     - internal/domain/order/**
 ```
 
+### 子系统识别（Step 2.4 用）
+
+Go 项目识别策略：
+
+- **Web Handler**：按 `handler/` / `controller/` 子目录聚合；Gin / Echo / chi 路由分组
+- **gRPC Service**：每个 `*.proto` service 定义对应一个子系统
+- **后台 Worker**：`cron` 库注册的任务、`asynq` / `machinery` 队列消费者
+- **CLI 子命令**：`cobra` 注册的命令各是一个子系统
+- **微服务**：每个 `cmd/<service>/main.go` 顶层各是一个子系统（处理 monorepo 时尤其重要）
+
+每个子系统记录：中文名、能做什么 + 给谁用、入口（REST 路径 / gRPC 方法名 / Cron / 命令名）。
+
 ### 实体 / 模型定位
 - `**/model/**`、`**/entity/**`、`**/domain/**`
 - `struct` 定义 + GORM 标签 `gorm:"..."`
@@ -222,6 +267,17 @@ order:
 - DDD 项目：`src/domain/<aggregate>/`
 
 **过滤非业务模块**：`error` / `util` / `common` / `config` / `prelude`。
+
+### 子系统识别（Step 2.4 用）
+
+Rust 项目识别策略：
+
+- **Web handler**：按 `routes/` 模块聚合；axum / actix-web / rocket 的路由组
+- **后台任务 / Worker**：`tokio::spawn` 长任务、`tokio-cron-scheduler` 注册的 job
+- **CLI 子命令**：`clap` 子命令
+- **Workspace 多 crate**：每个 binary crate 各是一个子系统
+
+每个子系统记录：中文名、能做什么 + 给谁用、入口（REST 路径 / Cron / 命令名）。
 
 ### 实体 / 模型定位
 - `**/models/**`、`**/entities/**`
@@ -271,8 +327,8 @@ payment-service:
 ### 处理策略
 1. 先在 Step 1 列出所有子模块及其角色
 2. Step 2-5 分别针对每个**核心**子模块执行（非核心可合并描述）
-3. 优先使用**并行派发子 agent**（见 SKILL.md "处理大型项目"），每个 agent 负责一个模块
-4. 最终文档按 `模块 A / 模块 B / ...` 组织，或按"领域模型 / 业务流程"横向组织，选择更清晰的方式
+3. 优先使用**并行派发子 agent**（见 SKILL.md “处理大型项目”），每个 agent 负责一个模块
+4. 最终文档按 `模块 A / 模块 B / ...` 组织，或按“领域模型 / 业务流程”横向组织，选择更清晰的方式
 
 ---
 
@@ -337,7 +393,7 @@ payment-service:
 | 桌面 | `electron`、`tauri` |
 | 小程序 | `taro`、`uniapp`、`wechat-miniprogram` |
 
-前后端在同一个仓库时能准确推断；**纯后端仓库推不出前端形态**——画一个通用 `Frontend` 节点 + "待补充具体形态"。
+前后端在同一个仓库时能准确推断；**纯后端仓库推不出前端形态**——画一个通用 `Frontend` 节点 + “待补充具体形态”。
 
 ---
 
