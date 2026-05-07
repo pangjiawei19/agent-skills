@@ -2,6 +2,8 @@
 
 本文件定义了 AI Agent 在此项目中工作时必须遵守的规则。
 
+@docs/agents/constitution.md
+
 ---
 
 ## 规范索引

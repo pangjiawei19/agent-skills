@@ -6,6 +6,7 @@
 set -eu
 CLAUDE_SKIPPED=0
 CONVENTIONS_SKIPPED=0
+CONSTITUTION_SKIPPED=0
 
 TARGET="${1:-.}"
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,10 +33,22 @@ else
   cp "$TEMPLATES/docs/agents/meta-conventions.md" "$TARGET/docs/agents/meta-conventions.md"
   CONVENTIONS_SKIPPED=0
 fi
+if [[ -f "$TARGET/docs/agents/constitution.md" ]]; then
+  echo "⚠ $TARGET/docs/agents/constitution.md 已存在，未覆盖。如需更新，请先备份旧文件再重试。"
+  CONSTITUTION_SKIPPED=1
+else
+  cp "$TEMPLATES/docs/agents/constitution.md" "$TARGET/docs/agents/constitution.md"
+  CONSTITUTION_SKIPPED=0
+fi
 
 echo
 echo "✓ 已写入："
 echo "  - $TARGET/AGENTS.md"
+if [[ "$CONSTITUTION_SKIPPED" -eq 0 ]]; then
+  echo "  - $TARGET/docs/agents/constitution.md"
+else
+  echo "  - docs/agents/constitution.md（已存在，未覆盖）"
+fi
 if [[ "$CONVENTIONS_SKIPPED" -eq 0 ]]; then
   echo "  - $TARGET/docs/agents/meta-conventions.md"
 else
