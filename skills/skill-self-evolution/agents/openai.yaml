@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Self Evolution"
+  short_description: "为其他 Skill 加装可控自进化闭环机制"
+  default_prompt: "Use $skill-self-evolution to add a controlled self-evolution loop to an existing skill."
