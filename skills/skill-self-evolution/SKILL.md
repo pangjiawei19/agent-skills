@@ -1,6 +1,6 @@
 ---
 name: skill-self-evolution
-version: 0.1.0
+version: 0.1.1
 description: 给 Skill 加装和运营自进化闭环。Use when the user asks to add self-evolution, run logging, review cycles, improvement evidence, candidate changes, regression gates, or controlled iteration to an existing skill; when adapting the mechanism from one skill to another; or when reviewing a skill's run traces to decide whether and how to update the skill.
 ---
 
@@ -19,6 +19,7 @@ description: 给 Skill 加装和运营自进化闭环。Use when the user asks t
 - 优先修改局部流程、模板或保护规则，避免重写整个 `SKILL.md`。
 - 修改前说明证据、改动位置、预期收益和潜在风险，并等待用户确认。
 - 修改后按目标 Skill 的回归检查清单验证。
+- 运行结束写轨迹前，默认向用户轻问一句使用感受或改进想法；用户不回答则跳过，不影响收尾。
 
 ## 版本管理
 
@@ -72,9 +73,12 @@ description: 给 Skill 加装和运营自进化闭环。Use when the user asks t
 - 用户意图与目标；
 - 执行路径；
 - 质量检查；
+- 用户反馈；
 - 问题与观察；
 - 候选改动；
 - 下次注意。
+
+写入运行轨迹前，先用一句轻量问题询问用户是否有使用感受、改进想法、偏好或下次期望需要记录。用户反馈只进入运行轨迹和候选改动，不直接修改目标 Skill，也不绕过阶段复盘和用户确认。
 
 只写结构化复盘，不保存完整对话转录。
 
