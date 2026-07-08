@@ -1,0 +1,4 @@
+interface:
+  display_name: "Grafana Query"
+  short_description: "查询 Grafana 指标并辅助线上排障分析"
+  default_prompt: "Use $grafana-query to discover Grafana metrics, run PromQL, and analyze an online issue."
