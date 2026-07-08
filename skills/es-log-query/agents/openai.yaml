@@ -1,0 +1,4 @@
+interface:
+  display_name: "ES 日志查询"
+  short_description: "只读查询 Elasticsearch 日志并辅助运维分析。"
+  default_prompt: "查询 ES 日志并分析线上问题。"
