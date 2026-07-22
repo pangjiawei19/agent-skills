@@ -29,19 +29,19 @@
 - Consumes: 当前未修改的 `skills/preparing-presentations/`。
 - Produces: Case E～G 的原始响应、六项评分和明确失败证据。
 
-- [ ] **Step 1: 写入新增评分规则和场景**
+- [x] **Step 1: 写入新增评分规则和场景**
 
 评分项：章节开场定位、章节总结与桥接、幕封或口头等价物、相邻页面可口述过渡、结尾路线回顾与行动、避免机械增加页面。硬失败分别为：接受无章节边界、只笼统建议加强衔接、接受 Q&A-only 结尾。
 
-- [ ] **Step 2: 使用独立 subagent 运行 Case E～G**
+- [x] **Step 2: 使用独立 subagent 运行 Case E～G**
 
 测试 Agent 读取当前 Skill 和所需 reference，但不得看到增量设计、评分规则或期望答案。三个场景使用设计文档第 7 节的输入，要求返回直接回复用户的内容和随后动作。
 
-- [ ] **Step 3: 记录并验证 RED**
+- [x] **Step 3: 记录并验证 RED**
 
 完整记录响应、逐项评分和失败理由。至少一个场景触发硬失败或总分低于 `5／6`，否则增强压力条件后重跑。
 
-- [ ] **Step 4: 提交 RED 基线**
+- [x] **Step 4: 提交 RED 基线**
 
 ```bash
 git add docs/evals/preparing-presentations-evaluation.md \
