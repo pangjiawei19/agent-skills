@@ -227,7 +227,7 @@ git commit -m "feat: add presentation preparation workflow"
 - Consumes: `SKILL.md` 的产物模式选择和分段共创路由。
 - Produces: 可直接执行的文档最小字段、模式选择规则和用户协作规则。
 
-- [ ] **Step 1: 编写产物契约**
+- [x] **Step 1: 编写产物契约**
 
 `artifact-contracts.md` 必须包含：
 
@@ -238,7 +238,7 @@ git commit -m "feat: add presentation preparation workflow"
 - 为 `brief.md`、`outline.md`、分章记录、`full-script.md`、`storyboard.md`、`timing.md`、素材清单、`demo-runbook.md`、`qa-bank.md` 分别列出职责、最小字段和不应承载的内容。
 - 明确推荐目录仅供参考，不得机械创建全部文件。
 
-- [ ] **Step 2: 编写协作手册**
+- [x] **Step 2: 编写协作手册**
 
 `facilitation-playbook.md` 必须包含：
 
@@ -252,7 +252,7 @@ git commit -m "feat: add presentation preparation workflow"
 - 用户跳过环节时记录风险但尊重选择；
 - 用户手工接管后的单一事实来源规则。
 
-- [ ] **Step 3: 验证主 Skill 能路由到两份 reference**
+- [x] **Step 3: 验证主 Skill 能路由到两份 reference**
 
 Run:
 
@@ -265,7 +265,7 @@ done
 
 Expected: 命令退出码为 `0`。
 
-- [ ] **Step 4: 提交产物与协作规则**
+- [x] **Step 4: 提交产物与协作规则**
 
 ```bash
 git add skills/preparing-presentations/references/artifact-contracts.md \
