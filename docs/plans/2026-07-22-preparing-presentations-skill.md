@@ -382,7 +382,7 @@ git commit -m "test: verify presentation preparation scenarios"
 - Consumes: 已通过 GREEN 场景的完整 Skill。
 - Produces: 可留在仓库继续迭代、但尚未安装的第一版 Skill。
 
-- [ ] **Step 1: 运行官方 Skill 校验**
+- [x] **Step 1: 运行官方 Skill 校验**
 
 Run:
 
@@ -394,7 +394,7 @@ uv run --with pyyaml python \
 
 Expected: `Skill is valid!`
 
-- [ ] **Step 2: 验证精确文件集合**
+- [x] **Step 2: 验证精确文件集合**
 
 Run:
 
@@ -412,7 +412,7 @@ skills/preparing-presentations/references/facilitation-playbook.md
 skills/preparing-presentations/references/quality-gates.md
 ```
 
-- [ ] **Step 3: 运行内容完整性检查**
+- [x] **Step 3: 运行内容完整性检查**
 
 Run:
 
@@ -425,11 +425,11 @@ git status --short --branch
 
 Expected: 无模板占位符；关键规则均可检索；`git diff --check` 无输出；仓库只可能因尚未提交的计划勾选而存在文档改动。
 
-- [ ] **Step 4: 对照设计自审**
+- [x] **Step 4: 对照设计自审**
 
 逐条核对设计文档第 2～10 节。确认无技术分享专属内容、无安装动作、无额外 README／脚本／资产，并在 evaluation 文档末尾记录自审结论。
 
-- [ ] **Step 5: 提交最终验证记录**
+- [x] **Step 5: 提交最终验证记录**
 
 ```bash
 git add docs/evals/preparing-presentations-evaluation.md \
