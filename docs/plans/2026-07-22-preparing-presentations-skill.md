@@ -285,7 +285,7 @@ git commit -m "docs: add presentation preparation playbooks"
 - Consumes: Skill 七阶段工作流和三种产物模式。
 - Produces: 每阶段可执行的完成检查，以及与 Skill 发现规则一致的 Codex UI 元数据。
 
-- [ ] **Step 1: 编写质量 Gate**
+- [x] **Step 1: 编写质量 Gate**
 
 `quality-gates.md` 必须分别定义：
 
@@ -300,7 +300,7 @@ git commit -m "docs: add presentation preparation playbooks"
 
 每个 Gate 同时写明：不满足时返回哪个阶段修订；用户明确接受风险时如何记录后继续。
 
-- [ ] **Step 2: 使用官方脚本重新生成 `openai.yaml`**
+- [x] **Step 2: 使用官方脚本重新生成 `openai.yaml`**
 
 Run:
 
@@ -315,7 +315,7 @@ uv run --with pyyaml python \
 
 Expected: 输出 `[OK] Created agents/openai.yaml`，且字符串值全部带双引号。
 
-- [ ] **Step 3: 验证元数据约束**
+- [x] **Step 3: 验证元数据约束**
 
 Run:
 
@@ -326,7 +326,7 @@ rg -n 'display_name: "Preparing Presentations"|short_description: ".{25,64}"|def
 
 Expected: 三个字段均匹配。
 
-- [ ] **Step 4: 提交质量 Gate 和元数据**
+- [x] **Step 4: 提交质量 Gate 和元数据**
 
 ```bash
 git add skills/preparing-presentations/references/quality-gates.md \
