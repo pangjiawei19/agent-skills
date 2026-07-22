@@ -1,0 +1,4 @@
+interface:
+  display_name: "Preparing Presentations"
+  short_description: "系统准备演讲、分享与培训内容，逐步形成讲稿和演示材料"
+  default_prompt: "Use $preparing-presentations to help me prepare this presentation from my current materials."

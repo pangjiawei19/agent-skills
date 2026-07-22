@@ -106,7 +106,7 @@ rg -n "RED 基线|Case A|Case B|Case C|Case D|硬失败|总分" docs/evals/prepa
 
 Expected: 四个 Case 均有完整响应和总分，并至少出现一处明确的 RED 失败结论。
 
-- [ ] **Step 5: 提交基线测试**
+- [x] **Step 5: 提交基线测试**
 
 ```bash
 git add docs/evals/preparing-presentations-evaluation.md
@@ -126,7 +126,7 @@ git commit -m "test: record preparing presentations baseline"
 - Consumes: Task 1 的基线失败行为和 Evaluation Contract。
 - Produces: 可被运行时发现的 `preparing-presentations` Skill，以及后续三份 reference 的明确路由入口。
 
-- [ ] **Step 1: 使用官方脚本初始化目录**
+- [x] **Step 1: 使用官方脚本初始化目录**
 
 Run:
 
@@ -141,7 +141,7 @@ python3 /Users/pangjiawei/.codex/skills/.system/skill-creator/scripts/init_skill
 
 Expected: 创建 Skill 目录、模板 `SKILL.md`、空 `references/` 和 `agents/openai.yaml`；不得使用 `--examples`。
 
-- [ ] **Step 2: 将模板替换为最小可用核心 Skill**
+- [x] **Step 2: 将模板替换为最小可用核心 Skill**
 
 `SKILL.md` 必须包含以下 frontmatter：
 
@@ -197,7 +197,7 @@ description: Use when preparing or revising a talk, knowledge-sharing session, t
 
 可以压缩措辞，但不得删除上述行为。
 
-- [ ] **Step 3: 检查模板残留和篇幅**
+- [x] **Step 3: 检查模板残留和篇幅**
 
 Run:
 
@@ -208,7 +208,7 @@ wc -w skills/preparing-presentations/SKILL.md
 
 Expected: `rg` 无匹配；`SKILL.md` 少于 `500` 个英文单词计数。
 
-- [ ] **Step 4: 提交核心工作流**
+- [x] **Step 4: 提交核心工作流**
 
 ```bash
 git add skills/preparing-presentations/SKILL.md skills/preparing-presentations/agents/openai.yaml
