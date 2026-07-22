@@ -130,7 +130,7 @@ git commit -m "test: verify narrative cohesion scenarios"
 - Consumes: 已通过新增和原有规则检查的 Skill。
 - Produces: 可继续留在功能分支的叙事连贯性增强版本。
 
-- [ ] **Step 1: 运行官方校验**
+- [x] **Step 1: 运行官方校验**
 
 ```bash
 uv run --with pyyaml python \
@@ -140,7 +140,7 @@ uv run --with pyyaml python \
 
 Expected: `Skill is valid!`
 
-- [ ] **Step 2: 运行内容检查**
+- [x] **Step 2: 运行内容检查**
 
 ```bash
 ! rg -n "TODO|TBD|\[TODO|Structuring This Skill" skills/preparing-presentations
@@ -150,7 +150,7 @@ git diff --check
 
 Expected: 无占位符和格式错误，新增规则均可检索。
 
-- [ ] **Step 3: 提交最终验证状态**
+- [x] **Step 3: 提交最终验证状态**
 
 ```bash
 git add docs/plans/2026-07-22-preparing-presentations-narrative-cohesion.md
