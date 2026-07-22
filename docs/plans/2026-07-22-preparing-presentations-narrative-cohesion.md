@@ -63,23 +63,23 @@ git commit -m "test: record narrative cohesion baseline"
 - Consumes: Task 1 暴露的实际失败。
 - Produces: 可执行的章节闭环、相邻页串读和结尾回顾规则。
 
-- [ ] **Step 1: 更新主 Skill**
+- [x] **Step 1: 更新主 Skill**
 
 在硬性规则中加入：标准和完整模式需要清晰章节边界；每章有问题、结论和下一章桥接；故事板与讲稿需要可口述页面过渡；Q&A 前完成全场路线回顾、核心结论和行动。
 
-- [ ] **Step 2: 更新产物契约**
+- [x] **Step 2: 更新产物契约**
 
 为大纲和分章记录增加章节问题、结论、回顾、桥接和幕封决策；为故事板增加承接上一页、本页角色、引出下一页和过渡句；为讲稿和结尾增加设计文档第 4 节的字段。
 
-- [ ] **Step 3: 更新协作手册**
+- [x] **Step 3: 更新协作手册**
 
 增加章节回顾与“下一章为什么此时出现”的确认；增加相邻页串读、骨架串读及七类常见页面关系；明确过渡不能模板化。
 
-- [ ] **Step 4: 更新质量 Gate**
+- [x] **Step 4: 更新质量 Gate**
 
 增加章节边界、页面连接和结尾回顾三个 Gate，并写清失败时返回的阶段。
 
-- [ ] **Step 5: 提交最小实现**
+- [x] **Step 5: 提交最小实现**
 
 ```bash
 git add skills/preparing-presentations
@@ -99,19 +99,19 @@ git commit -m "feat: strengthen presentation narrative cohesion"
 - Consumes: 与 Task 1 完全相同的 Case E～G。
 - Produces: GREEN 对比、必要的最小 REFACTOR 和 Case A～D 不回退的证据。
 
-- [ ] **Step 1: 使用新的独立 subagent 复跑 Case E～G**
+- [x] **Step 1: 使用新的独立 subagent 复跑 Case E～G**
 
 每例至少 `5／6`，且不得触发硬失败。测试 Agent不得获得评分规则和期望答案。
 
-- [ ] **Step 2: 针对真实绕过行为 REFACTOR**
+- [x] **Step 2: 针对真实绕过行为 REFACTOR**
 
 只修改导致低分的最小规则，并重跑失败场景；没有失败则记录无需修订。
 
-- [ ] **Step 3: 检查 Case A～D 关键规则**
+- [x] **Step 3: 检查 Case A～D 关键规则**
 
 静态核对以下行为仍存在：一次一个关键问题、轻量模式不膨胀、确认后冻结、人工修改文件不覆盖、PPTX 路由到 `presentations` Skill。
 
-- [ ] **Step 4: 提交 GREEN 结果**
+- [x] **Step 4: 提交 GREEN 结果**
 
 ```bash
 git add docs/evals/preparing-presentations-evaluation.md skills/preparing-presentations
