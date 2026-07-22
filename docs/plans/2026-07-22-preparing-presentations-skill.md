@@ -349,21 +349,21 @@ git commit -m "docs: add presentation quality gates"
 - Consumes: Task 1 的相同四个提示词和 Task 2～4 的完整 Skill。
 - Produces: 可对比的 GREEN 结果，以及针对实际绕过行为完成的最小修订。
 
-- [ ] **Step 1: 在加载 Skill 的上下文中复跑四个场景**
+- [x] **Step 1: 在加载 Skill 的上下文中复跑四个场景**
 
 为每个场景使用新的独立 subagent，明确要求完整读取 `skills/preparing-presentations/SKILL.md`，并按其中路由读取当前场景需要的 reference。不得向 subagent 提供评分答案。
 
-- [ ] **Step 2: 记录 GREEN 结果**
+- [x] **Step 2: 记录 GREEN 结果**
 
 将完整响应、逐项评分、硬失败判断和与 RED 基线的变化写入 evaluation 文档。
 
 Expected: 四个场景均无硬失败；Case A、B、C、D 每个总分至少为 `5／6`。
 
-- [ ] **Step 3: 针对真实绕过行为执行 REFACTOR**
+- [x] **Step 3: 针对真实绕过行为执行 REFACTOR**（四例均为 `6／6`，未触发修订）
 
 如果任何场景低于 `5／6`，只修改导致失败的最小规则，并用一个新的 subagent 重跑该场景。将失败理由、修订内容和复测结果写入 evaluation 文档。不得为了提高分数加入与失败无关的规则。
 
-- [ ] **Step 4: 提交验证结果和必要修订**
+- [x] **Step 4: 提交验证结果和必要修订**
 
 ```bash
 git add docs/evals/preparing-presentations-evaluation.md skills/preparing-presentations
