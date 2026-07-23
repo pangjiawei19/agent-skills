@@ -4,3 +4,7 @@ docs/superpowers
 
 # Local SkillHub release artifacts
 dist/
+
+# Python caches created by repository tooling
+__pycache__/
+*.py[cod]
