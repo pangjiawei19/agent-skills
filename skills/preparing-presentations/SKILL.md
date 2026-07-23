@@ -1,6 +1,7 @@
 ---
 name: preparing-presentations
-description: Use when preparing or revising a talk, knowledge-sharing session, training course, or other presentation whose goal is to communicate knowledge, viewpoints, or experience, especially when the topic is vague, materials are fragmented, the narrative needs structuring, or a script, storyboard, rehearsal plan, or presentation artifact is needed.
+description: "当用户需要准备或修改演讲、经验分享、技术分享、培训课程或主题演示，尤其是主题模糊、素材零散、叙事结构不清，或需要大纲、讲稿、故事板、排练计划与演示文件时使用。"
+version: 1.0.0
 ---
 
 # Preparing Presentations
