@@ -48,3 +48,23 @@ test("indices command prints configured aliases", async () => {
   const json = JSON.parse(result.stdout);
   assert.deepEqual(json.indices, { app: "app-log-*" });
 });
+
+test("discover rejects an oversized sample before network access", async () => {
+  const configPath = await writeConfig();
+  const result = spawnSync(process.execPath, ["scripts/es-inspect.mjs", "discover", "--config", configPath, "--index", "app", "--sample-size", "21"], {
+    cwd: path.resolve("."),
+    encoding: "utf8",
+  });
+  assert.notEqual(result.status, 0);
+  assert.match(JSON.parse(result.stdout).error.message, /sample-size 最大值为 20/);
+});
+
+test("terms requires a field before network access", async () => {
+  const configPath = await writeConfig();
+  const result = spawnSync(process.execPath, ["scripts/es-inspect.mjs", "terms", "--config", configPath, "--index", "app"], {
+    cwd: path.resolve("."),
+    encoding: "utf8",
+  });
+  assert.notEqual(result.status, 0);
+  assert.match(JSON.parse(result.stdout).error.message, /缺少 --field/);
+});

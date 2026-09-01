@@ -1,8 +1,8 @@
 ---
 name: es-log-query
-description: Query Elasticsearch logs and analyze operations issues. Use when Codex needs to inspect ES logs, search by time range, keyword, level, traceId, requestId, Kubernetes namespace, pod, container, app label, run read-only mapping/field-caps/count diagnostics, or summarize evidence for incident investigation. Only supports read-only Elasticsearch operations.
+description: Query Elasticsearch logs and analyze operations issues. Use when Codex needs to inspect ES logs, discover unknown structured fields, inspect top field values, search by time range, keyword, level, traceId, requestId, Kubernetes metadata, run read-only schema/count diagnostics, or summarize incident evidence. Only supports read-only Elasticsearch operations.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # ES 日志查询
@@ -21,12 +21,13 @@ metadata:
 
 ## 标准流程
 
-1. 明确 profile、index alias、时间范围、关键词、traceId、requestId、pod、namespace 或业务现象。
-2. 字段不确定时，先运行 `scripts/es-inspect.mjs mapping` 或 `scripts/es-inspect.mjs field-caps`。
-3. 先用 `size 5` 到 `size 20` 小样本验证查询条件。
-4. 条件确认后，再扩大到 `size 100` 到 `size 500`。
-5. 需要趋势或分类时，使用 `--dsl` 执行 `_search` 聚合。
-6. 输出结论时写清查询条件、时间范围、命中数量、代表性日志片段、判断依据和不确定性。
+1. 明确 profile、index alias、时间范围、关键词、traceId、requestId 或业务现象。存在多个 profile 且用户未说明环境时，先确认 profile，避免静默查询默认环境。
+2. 面对未知结构化日志，先运行 `discover`。它抽样 `_source`，但只输出字段路径、出现次数和字段能力，不输出样本值。
+3. 根据发现结果，对 app、service、namespace、container、event、level、status 等低敏感 keyword 字段运行 `terms`，定位真实取值和分布。不要对用户标识、请求正文、token 或高基数字段运行 `terms`。
+4. 用精确字段和值锁定目标后，先以 `size 5` 到 `size 20` 小样本验证查询条件，并用 `--source` 限制返回字段。
+5. 条件确认后，再扩大到 `size 100` 到 `size 500`。需要趋势、多条件分类或非 terms 聚合时，使用 `--dsl`。
+6. `discover` 未观察到目标字段时，用 `field-caps` 扩大字段 pattern；字段跨索引类型冲突或仍不确定时，再查看 `mapping`。
+7. 输出结论时写清查询条件、时间范围、命中数量、代表性日志片段、判断依据和不确定性。
 
 ## 查询命令
 
@@ -57,10 +58,17 @@ node scripts/es-query.mjs search --profile prod --index app --dsl /tmp/query.jso
 ```bash
 node scripts/es-inspect.mjs profiles
 node scripts/es-inspect.mjs indices --profile prod
+node scripts/es-inspect.mjs discover --profile prod --index app --start now-1h --end now --query-string '"service-name"' --sample-size 10
+node scripts/es-inspect.mjs terms --profile prod --index app --start now-1h --end now --field kubernetes.labels.app.keyword --size 20
+node scripts/es-inspect.mjs terms --profile prod --index app --term kubernetes.labels.app.keyword=service-name --field event.keyword
 node scripts/es-inspect.mjs mapping --profile prod --index app
 node scripts/es-inspect.mjs field-caps --profile prod --index app --fields "@timestamp,message,level,kubernetes.*"
 node scripts/es-inspect.mjs count --profile prod --index app --start now-1h --end now
 ```
+
+`discover` 支持与查询命令相同的时间和过滤参数；`--sample-size` 默认 5、最大 20，`--max-fields` 默认 100、最大 200。`--max-fields` 限制样本字段数，相关 `.keyword` 等多字段会额外返回。结果中的 `presentInSamples` 是字段在样本中的出现次数，`aggregatable: true` 的 keyword／数值／日期字段适合后续 `terms` 或 DSL 聚合。
+
+`terms` 使用 `--field` 指定任意可聚合字段，支持 `--term`、`--match`、`--query-string`、`--message`、`--level` 和时间范围；`--size` 默认 20、最大 100。它返回 top buckets，不代表字段的全部不同值。
 
 ## 分析输出格式
 
@@ -79,4 +87,6 @@ node scripts/es-inspect.mjs count --profile prod --index app --start now-1h --en
 - 不要尝试写入、删除、更新、bulk、reindex 或索引管理操作。
 - `--dsl` 只能作为 `_search` body，不能改变请求路径或方法。
 - 不要一次性大范围导出日志；默认 `size` 上限为 1000。
+- `discover` 只输出字段结构，不输出内部抽样值；分析样本时继续使用 `--source` 最小化字段。
+- `terms` 只用于业务分类和低敏感字段；输出前隐藏用户标识、请求标识、凭据及其他敏感 bucket。
 - 查询失败或命中为 0 时，说明可能原因，包括字段、索引、时间范围、权限或网络。

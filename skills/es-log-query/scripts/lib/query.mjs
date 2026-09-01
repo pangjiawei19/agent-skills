@@ -59,3 +59,31 @@ export function buildSearchBody(input) {
 export function buildCountBody(input) {
   return baseBody(input);
 }
+
+export function buildDiscoverBody(input) {
+  const sampleSize = Number(input.sampleSize ?? 5);
+  if (!Number.isInteger(sampleSize) || sampleSize < 1) throw new Error("sample-size 必须是正整数");
+  if (sampleSize > 20) throw new Error("sample-size 最大值为 20");
+  return {
+    ...buildSearchBody({ ...input, size: sampleSize, from: 0 }),
+    track_total_hits: true,
+  };
+}
+
+export function buildTermsBody(input) {
+  const field = String(input.field ?? "").trim();
+  if (!field) throw new Error("缺少 --field");
+  const size = Number(input.size ?? 20);
+  if (!Number.isInteger(size) || size < 1) throw new Error("size 必须是正整数");
+  if (size > 100) throw new Error("terms size 最大值为 100");
+  return {
+    ...baseBody(input),
+    size: 0,
+    track_total_hits: true,
+    aggs: {
+      values: {
+        terms: { field, size },
+      },
+    },
+  };
+}

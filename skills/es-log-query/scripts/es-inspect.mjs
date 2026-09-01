@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { parseArgs, listValue } from "./lib/args.mjs";
 import { loadConfig, redactProfile, resolveFieldSet, resolveIndex, resolveProfile } from "./lib/config.mjs";
+import { collectObservedFields, describeObservedFields, fieldCapsPatterns } from "./lib/discovery.mjs";
 import { requestJson } from "./lib/http.mjs";
-import { buildCountBody } from "./lib/query.mjs";
+import { buildCountBody, buildDiscoverBody, buildTermsBody } from "./lib/query.mjs";
 import { toIsoTime } from "./lib/time.mjs";
 
 function printOk(data) {
@@ -21,6 +22,25 @@ function printError(err) {
       2,
     )}\n`,
   );
+}
+
+function totalFromSearch(data) {
+  const total = data.hits?.total;
+  return typeof total === "number" ? total : total?.value ?? 0;
+}
+
+function commonQueryInput(values, fields) {
+  return {
+    fields,
+    timeField: values["time-field"],
+    start: values.start ? toIsoTime(values.start) : undefined,
+    end: values.end ? toIsoTime(values.end) : undefined,
+    message: values.message,
+    level: values.level,
+    terms: listValue(values.term),
+    matches: listValue(values.match),
+    queryString: values["query-string"],
+  };
 }
 
 async function main(argv) {
@@ -48,24 +68,52 @@ async function main(argv) {
     printOk({ profile: profileName, index, fieldCaps: data });
     return;
   }
-  if (command === "count") {
+  if (["count", "discover", "terms"].includes(command)) {
     const fields = resolveFieldSet(profile, values["field-set"] || "default");
-    const body = buildCountBody({
-      fields,
-      timeField: values["time-field"],
-      start: values.start ? toIsoTime(values.start) : undefined,
-      end: values.end ? toIsoTime(values.end) : undefined,
-      message: values.message,
-      level: values.level,
-      terms: listValue(values.term),
-      matches: listValue(values.match),
-      queryString: values["query-string"],
-    });
+    const queryInput = commonQueryInput(values, fields);
+    if (command === "discover") {
+      const body = buildDiscoverBody({ ...queryInput, sampleSize: values["sample-size"] });
+      const data = await requestJson({ profile, index, operation: "_search", method: "POST", body });
+      const hits = data.hits?.hits ?? [];
+      const observed = collectObservedFields(hits, values["max-fields"]);
+      const patterns = fieldCapsPatterns(observed.fields);
+      const caps = patterns
+        ? await requestJson({ profile, index, operation: "_field_caps", method: "GET", query: { fields: patterns } })
+        : { fields: {} };
+      const discovered = describeObservedFields(observed.fields, caps);
+      printOk({
+        profile: profileName,
+        index,
+        total: totalFromSearch(data),
+        sampled: hits.length,
+        totalObservedFields: observed.totalObservedFields,
+        returnedFields: discovered.length,
+        truncated: observed.truncated,
+        fields: discovered,
+      });
+      return;
+    }
+    if (command === "terms") {
+      const body = buildTermsBody({ ...queryInput, field: values.field, size: values.size });
+      const data = await requestJson({ profile, index, operation: "_search", method: "POST", body });
+      const aggregation = data.aggregations?.values ?? {};
+      printOk({
+        profile: profileName,
+        index,
+        field: values.field,
+        total: totalFromSearch(data),
+        returned: aggregation.buckets?.length ?? 0,
+        sumOtherDocCount: aggregation.sum_other_doc_count ?? 0,
+        buckets: (aggregation.buckets ?? []).map((bucket) => ({ key: bucket.key, count: bucket.doc_count })),
+      });
+      return;
+    }
+    const body = buildCountBody(queryInput);
     const data = await requestJson({ profile, index, operation: "_count", method: "POST", body });
     printOk({ profile: profileName, index, count: data.count ?? 0 });
     return;
   }
-  throw new Error("用法：node scripts/es-inspect.mjs profiles|indices|mapping|field-caps|count");
+  throw new Error("用法：node scripts/es-inspect.mjs profiles|indices|mapping|field-caps|discover|terms|count");
 }
 
 main(process.argv.slice(2)).catch((err) => {

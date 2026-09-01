@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildCountBody, buildSearchBody } from "../scripts/lib/query.mjs";
+import { buildCountBody, buildDiscoverBody, buildSearchBody, buildTermsBody } from "../scripts/lib/query.mjs";
 
 const fields = {
   time: "@timestamp",
@@ -56,4 +56,22 @@ test("buildCountBody omits pagination and sort", () => {
   assert.deepEqual(body.query.bool.must[0], { match_phrase: { level: "warn" } });
   assert.equal(body.size, undefined);
   assert.equal(body.sort, undefined);
+});
+
+test("buildDiscoverBody reuses filters and caps the sample", () => {
+  const body = buildDiscoverBody({ fields, start: "2026-07-08T00:00:00.000Z", sampleSize: 10 });
+  assert.equal(body.size, 10);
+  assert.equal(body.track_total_hits, true);
+  assert.deepEqual(body.sort, [{ "@timestamp": { order: "desc" } }]);
+  assert.throws(() => buildDiscoverBody({ fields, sampleSize: 21 }), /sample-size 最大值为 20/);
+});
+
+test("buildTermsBody creates a bounded terms aggregation", () => {
+  const body = buildTermsBody({ fields, field: "event.keyword", level: "warn", size: 25 });
+  assert.equal(body.size, 0);
+  assert.equal(body.track_total_hits, true);
+  assert.deepEqual(body.query.bool.must[0], { match_phrase: { level: "warn" } });
+  assert.deepEqual(body.aggs.values.terms, { field: "event.keyword", size: 25 });
+  assert.throws(() => buildTermsBody({ fields }), /缺少 --field/);
+  assert.throws(() => buildTermsBody({ fields, field: "event.keyword", size: 101 }), /terms size 最大值为 100/);
 });
