@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFile } from "node:fs/promises";
 import { parseArgs, listValue } from "./lib/args.mjs";
-import { loadConfig, resolveFieldSet, resolveIndex, resolveProfile } from "./lib/config.mjs";
+import { loadConfig, resolveIndex, resolveProfile } from "./lib/config.mjs";
 import { requestJson } from "./lib/http.mjs";
 import { buildSearchBody } from "./lib/query.mjs";
 import { toIsoTime } from "./lib/time.mjs";
@@ -35,14 +35,12 @@ async function main(argv) {
   const config = await loadConfig({ configPath: values.config });
   const { name: profileName, profile } = resolveProfile(config, values.profile);
   const index = resolveIndex(profile, values.index);
-  const fields = resolveFieldSet(profile, values["field-set"] || "default");
   let body;
   if (values.dsl) {
     body = JSON.parse(await readFile(values.dsl, "utf8"));
     if (body.size != null && Number(body.size) > 1000) throw new Error("size 最大值为 1000");
   } else {
     body = buildSearchBody({
-      fields,
       timeField: values["time-field"],
       start: values.start ? toIsoTime(values.start) : undefined,
       end: values.end ? toIsoTime(values.end) : undefined,

@@ -23,25 +23,6 @@
       "indices": {
         "app": "app-log-*",
         "nginx": "nginx-*"
-      },
-      "fieldSets": {
-        "default": {
-          "time": "@timestamp",
-          "message": "message",
-          "level": "level",
-          "traceId": "traceId",
-          "requestId": "requestId",
-          "namespace": "kubernetes.namespace_name.keyword",
-          "pod": "kubernetes.pod_name.keyword",
-          "container": "kubernetes.container_name.keyword",
-          "app": "kubernetes.labels.app.keyword",
-          "stream": "containerd_stream"
-        },
-        "containerd": {
-          "time": "containerd_time",
-          "message": "message",
-          "level": "level"
-        }
       }
     }
   }
@@ -57,7 +38,8 @@
 - `requestTimeoutMs`：请求超时时间，单位毫秒。
 - `insecure`：HTTPS 是否跳过证书校验。
 - `indices`：索引别名。命令中的 `--index app` 会解析成对应 pattern。
-- `fieldSets`：字段映射集。`default` 是默认映射。
+
+日志字段结构不写入配置。查询默认使用 `@timestamp`、`message` 和 `level`；非标准时间字段使用 `--time-field`，其他结构化字段通过 `discover` 发现后使用通用过滤参数查询。
 
 安全提醒：
 

@@ -2,7 +2,7 @@
 name: es-log-query
 description: Query Elasticsearch logs and analyze operations issues. Use when Codex needs to inspect ES logs, discover unknown structured fields, inspect top field values, search by time range, keyword, level, traceId, requestId, Kubernetes metadata, run read-only schema/count diagnostics, or summarize incident evidence. Only supports read-only Elasticsearch operations.
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # ES 日志查询
@@ -42,16 +42,18 @@ node scripts/es-query.mjs search --profile prod --index app --dsl /tmp/query.jso
 
 - `--profile`：选择环境。省略时使用配置中的 `defaultProfile`。
 - `--index`：索引别名或原始 index pattern。
-- `--field-set`：字段映射集，默认 `default`。
 - `--start`、`--end`：时间范围，支持 `now`、`now-30m`、ISO、秒级时间戳、毫秒级时间戳。
-- `--message`：对 message 字段做全文匹配。
-- `--level`：对 level 字段做短语匹配。
+- `--time-field`：覆盖默认时间字段 `@timestamp`。
+- `--message`：对固定的 `message` 字段做全文匹配。
+- `--level`：对固定的 `level` 字段做短语匹配。
 - `--term key=value`：精确匹配，可重复。
 - `--match key=value`：全文匹配，可重复。
 - `--query-string`：ES query_string 查询。
 - `--dsl file.json`：读取完整 `_search` body。
 - `--size`：返回条数，默认 100，最大 1000。
 - `--source`：限制 `_source` 字段，使用逗号分隔。
+
+日志使用非标准 message、level 或其他结构化字段时，先用 `discover` 找到真实字段，再使用 `--term`、`--match` 或 `--query-string`。配置只负责连接和索引别名，不保存日志字段结构。
 
 ## 诊断命令
 

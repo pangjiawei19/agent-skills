@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { parseArgs, listValue } from "./lib/args.mjs";
-import { loadConfig, redactProfile, resolveFieldSet, resolveIndex, resolveProfile } from "./lib/config.mjs";
+import { loadConfig, redactProfile, resolveIndex, resolveProfile } from "./lib/config.mjs";
 import { collectObservedFields, describeObservedFields, fieldCapsPatterns } from "./lib/discovery.mjs";
 import { requestJson } from "./lib/http.mjs";
 import { buildCountBody, buildDiscoverBody, buildTermsBody } from "./lib/query.mjs";
@@ -29,9 +29,8 @@ function totalFromSearch(data) {
   return typeof total === "number" ? total : total?.value ?? 0;
 }
 
-function commonQueryInput(values, fields) {
+function commonQueryInput(values) {
   return {
-    fields,
     timeField: values["time-field"],
     start: values.start ? toIsoTime(values.start) : undefined,
     end: values.end ? toIsoTime(values.end) : undefined,
@@ -69,8 +68,7 @@ async function main(argv) {
     return;
   }
   if (["count", "discover", "terms"].includes(command)) {
-    const fields = resolveFieldSet(profile, values["field-set"] || "default");
-    const queryInput = commonQueryInput(values, fields);
+    const queryInput = commonQueryInput(values);
     if (command === "discover") {
       const body = buildDiscoverBody({ ...queryInput, sampleSize: values["sample-size"] });
       const data = await requestJson({ profile, index, operation: "_search", method: "POST", body });

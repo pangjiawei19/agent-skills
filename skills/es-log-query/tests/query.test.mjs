@@ -2,15 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildCountBody, buildDiscoverBody, buildSearchBody, buildTermsBody } from "../scripts/lib/query.mjs";
 
-const fields = {
-  time: "@timestamp",
-  message: "message",
-  level: "level",
-};
-
 test("buildSearchBody creates bool query from common filters", () => {
   const body = buildSearchBody({
-    fields,
     start: "2026-07-08T00:00:00.000Z",
     end: "2026-07-08T01:00:00.000Z",
     message: "timeout",
@@ -36,7 +29,6 @@ test("buildSearchBody creates bool query from common filters", () => {
 
 test("buildSearchBody accepts query string and source list", () => {
   const body = buildSearchBody({
-    fields,
     queryString: 'level:error AND message:"timeout"',
     source: "message,level,@timestamp",
   });
@@ -48,30 +40,30 @@ test("buildSearchBody accepts query string and source list", () => {
 });
 
 test("buildSearchBody enforces size limit", () => {
-  assert.throws(() => buildSearchBody({ fields, size: 1001 }), /size 最大值为 1000/);
+  assert.throws(() => buildSearchBody({ size: 1001 }), /size 最大值为 1000/);
 });
 
 test("buildCountBody omits pagination and sort", () => {
-  const body = buildCountBody({ fields, level: "warn" });
+  const body = buildCountBody({ level: "warn" });
   assert.deepEqual(body.query.bool.must[0], { match_phrase: { level: "warn" } });
   assert.equal(body.size, undefined);
   assert.equal(body.sort, undefined);
 });
 
 test("buildDiscoverBody reuses filters and caps the sample", () => {
-  const body = buildDiscoverBody({ fields, start: "2026-07-08T00:00:00.000Z", sampleSize: 10 });
+  const body = buildDiscoverBody({ start: "2026-07-08T00:00:00.000Z", sampleSize: 10 });
   assert.equal(body.size, 10);
   assert.equal(body.track_total_hits, true);
   assert.deepEqual(body.sort, [{ "@timestamp": { order: "desc" } }]);
-  assert.throws(() => buildDiscoverBody({ fields, sampleSize: 21 }), /sample-size 最大值为 20/);
+  assert.throws(() => buildDiscoverBody({ sampleSize: 21 }), /sample-size 最大值为 20/);
 });
 
 test("buildTermsBody creates a bounded terms aggregation", () => {
-  const body = buildTermsBody({ fields, field: "event.keyword", level: "warn", size: 25 });
+  const body = buildTermsBody({ field: "event.keyword", level: "warn", size: 25 });
   assert.equal(body.size, 0);
   assert.equal(body.track_total_hits, true);
   assert.deepEqual(body.query.bool.must[0], { match_phrase: { level: "warn" } });
   assert.deepEqual(body.aggs.values.terms, { field: "event.keyword", size: 25 });
-  assert.throws(() => buildTermsBody({ fields }), /缺少 --field/);
-  assert.throws(() => buildTermsBody({ fields, field: "event.keyword", size: 101 }), /terms size 最大值为 100/);
+  assert.throws(() => buildTermsBody({}), /缺少 --field/);
+  assert.throws(() => buildTermsBody({ field: "event.keyword", size: 101 }), /terms size 最大值为 100/);
 });

@@ -33,12 +33,6 @@ export function resolveIndex(profile, indexName) {
   return profile.indices?.[indexName] ?? indexName;
 }
 
-export function resolveFieldSet(profile, fieldSetName = "default") {
-  const fields = profile.fieldSets?.[fieldSetName] ?? profile.fieldSets?.default;
-  if (!fields) throw new Error(`未找到 field set：${fieldSetName}`);
-  return fields;
-}
-
 export function redactProfile(profile) {
   return {
     ...profile,

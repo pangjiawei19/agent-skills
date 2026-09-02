@@ -28,7 +28,6 @@ test("es-query rejects oversized size before network access", async () => {
         prod: {
           node: "http://127.0.0.1:9",
           indices: { app: "app-log-*" },
-          fieldSets: { default: { time: "@timestamp", message: "message", level: "level" } },
         },
       },
     }),

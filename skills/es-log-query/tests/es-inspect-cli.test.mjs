@@ -17,7 +17,6 @@ async function writeConfig() {
           node: "http://127.0.0.1:9",
           auth: { username: "elastic", password: "secret" },
           indices: { app: "app-log-*" },
-          fieldSets: { default: { time: "@timestamp", message: "message", level: "level" } },
         },
       },
     }),
