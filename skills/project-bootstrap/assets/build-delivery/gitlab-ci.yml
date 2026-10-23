@@ -1,0 +1,115 @@
+# 复制到目标工程的 .gitlab-ci.yml，并复制同目录脚本到 scripts/ci/。
+# Agent 必须按模块要求落实实际镜像、Runner、命令及 CI 变量，不能原样交付空配置。
+stages: [scan, verify, build, report]
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH =~ /^release\/.+$/'
+    - when: never
+
+default:
+  # 验证 Runner 不继承镜像上传身份；构建 Runner 可使用团队 AWS Role。
+  tags: ["$CI_VERIFY_RUNNER_TAG"]
+
+variables:
+  IMAGE_COMPONENT: "app"
+  IMAGE_TARGET: "runtime"
+  DOCKERFILE_PATH: "Dockerfile"
+  BUILD_CONTEXT: "."
+  # 单一交付清单；构建变量、Job／matrix 与清单对应，汇总不使用自身 Job ID 代替构建 Job ID。
+  EXPECTED_IMAGE_SPECS: '{"app":{"repository":"app","target":"runtime","platform":"linux/amd64"}}'
+  CI_COMMAND_TIMEOUT_SECONDS: "900"
+  CI_COMMAND_STOP_SECONDS: "10"
+
+source-scan:
+  stage: scan
+  image: "$CI_VERIFY_IMAGE"
+  script:
+    - |
+      set -eu
+      trap 'ci_scan_code=$?; trap - EXIT; if ! printf "%s\n" "$ci_scan_code" > source-scan-exit-code.txt; then if [ "$ci_scan_code" -eq 0 ]; then ci_scan_code=1; fi; fi; exit "$ci_scan_code"' EXIT
+      if [[ ! "${CI_SOURCE_SCAN_COMMAND:-}" =~ [^[:space:]] ]]; then
+        printf '%s\n' '需要配置实际依赖与秘密扫描及报告校验命令。' >&2
+        exit 1
+      fi
+      export CI_IMAGE_ID=
+      python3 scripts/ci/run-command.py --timeout "${CI_COMMAND_TIMEOUT_SECONDS-900}" --grace "${CI_COMMAND_STOP_SECONDS-10}" --report-directory security-reports/source -- bash -euo pipefail -c "$CI_SOURCE_SCAN_COMMAND"
+  artifacts:
+    when: always
+    paths: [source-scan-exit-code.txt, security-reports/source/]
+    expire_in: 14 days
+
+verify:
+  stage: verify
+  image: "$CI_VERIFY_IMAGE"
+  script:
+    - |
+      set -eu
+      trap 'ci_verify_code=$?; trap - EXIT; if ! printf "%s\n" "$ci_verify_code" > verify-exit-code.txt; then if [ "$ci_verify_code" -eq 0 ]; then ci_verify_code=1; fi; fi; exit "$ci_verify_code"' EXIT
+      if [[ ! "${CI_VERIFY_COMMAND:-}" =~ [^[:space:]] ]]; then
+        printf '%s\n' '需要配置工程实际的锁定安装及验证命令。' >&2
+        exit 1
+      fi
+      python3 scripts/ci/run-command.py --timeout "${CI_COMMAND_TIMEOUT_SECONDS-900}" --grace "${CI_COMMAND_STOP_SECONDS-10}" -- bash -euo pipefail -c "$CI_VERIFY_COMMAND"
+  artifacts:
+    when: always
+    paths: [verify-exit-code.txt]
+    expire_in: 14 days
+
+build-image:
+  stage: build
+  needs: [source-scan, verify]
+  image: "$CI_BUILD_IMAGE"
+  tags: ["$CI_BUILD_RUNNER_TAG"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH =~ /^release\/.+$/'
+    - when: never
+  script:
+    - bash scripts/ci/build-image.sh
+  artifacts:
+    when: always
+    paths: [build-results/, security-reports/image/]
+    expire_in: 14 days
+
+collect-images:
+  stage: build
+  image: "$CI_NOTIFY_IMAGE"
+  needs: [source-scan, verify, build-image]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH =~ /^release\/.+$/'
+    - when: never
+  # 交付记录校验是必需步骤，不能因通知允许失败而放宽。
+  script:
+    - python3 scripts/ci/notify-feishu.py --outcome success --collect-only
+  artifacts:
+    when: always
+    paths: [build-result.json]
+    expire_in: 14 days
+
+.notify:
+  stage: report
+  image: "$CI_NOTIFY_IMAGE"
+  dependencies: [source-scan, verify, build-image, collect-images]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH =~ /^release\/.+$/'
+    - when: never
+  # 通知失败单独显示警告，不改写构建与推送结果。
+  allow_failure: true
+  artifacts:
+    when: always
+    paths: [build-result.json]
+    expire_in: 14 days
+
+notify-success:
+  extends: .notify
+  when: on_success
+  script:
+    - python3 scripts/ci/notify-feishu.py --outcome success
+
+notify-failure:
+  extends: .notify
+  when: on_failure
+  script:
+    - python3 scripts/ci/notify-feishu.py --outcome failure
